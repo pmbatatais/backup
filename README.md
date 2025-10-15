@@ -177,3 +177,9 @@ sudo service rest_server status
 - Repositório adaptado para FreeBSD: <https://github.com/pmbatatais/backup-server.git>
 
 ---
+
+## **📜 Autor**
+
+**Leonardo Ribeiro**  
+Prefeitura Municipal de Batatais  
+Responsável técnico pela padronização dos sistemas de backup e infraestrutura de servidores.
