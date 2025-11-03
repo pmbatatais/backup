@@ -176,6 +176,8 @@ Este capítulo explica como disponibilizar seu **Rest Server** na web usando **N
 ✅ **Subpasta:** `https://meudominio.com/restserver`  
 ✅ **Subdomínio:** `https://backup.meudominio.com`
 
+> 🧠 Adotamos `meudominio.com` como o domínio oficial deste tutorial. Obviamente que você deverá substituri `meudominio.com` por um domínio totalmente qualificado.
+
 ---
 
 
@@ -217,18 +219,20 @@ ssh admin@192.168.1.100 -p 65022
 ---
 ### **2️⃣ Criando o arquivo de autenticação Basic Auth**
 
-Para proteger o servidor REST contra clientes não autorizados, você pode configurar a autenticação básica HTTP, assim o cliente deverá inserir credenciais válidas para se autenticar.
+Para proteger o servidor REST contra clientes não autorizados, você pode configurar a **autenticação básica HTTP** (ou simplesmente **Basic Auth**).
+Assim, apenas clientes com as credenciais poderão salvar dados.
+
 > Basic HTTP Auth deve ser usado apenas em conexeções HTTPS pois a requisição é criptografada de ponta a ponta. 
 
 Crie o arquivo **RESTSERVER** para autenticação:
 
 - Usuário: restserver
-- Senha: "SENHA_DO_USUARIO"
-> Mude `SENHA_DO_USUARIO` para uma senha forte!
+- Senha: restserver
+> Certifique-se de definir credenciais fortes!
 
 ```shell
-mkdir -p /usr/local/etc/nginx/passwords & \
-openssl passwd -apr1 "SENHA_DO_USUARIO" | \
+mkdir -p /usr/local/etc/nginx/passwords && \
+openssl passwd -apr1 "restserver" | \
 sed 's/^/restserver:/' > /usr/local/etc/nginx/passwords/RESTSERVER
 ```
 
@@ -249,9 +253,9 @@ Quando você cria o arquivo:
 Ele contém:
 
 - **Usuário:** `restserver`
-- **Senha:** a que você definiu em `SENHA_DO_USUARIO`
+- **Senha:** `restserver`
 
-Para que o cliente **Restic** consiga autenticar no Rest Server protegido por Basic Auth, é necessário definir **duas variáveis de ambiente**, [conforme a documentação oficial do Restic](https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html#rest-server):
+Para que o cliente **Restic** consiga autenticar no **Rest Server** protegido por Basic Auth, é necessário definir **duas variáveis de ambiente**, [conforme a documentação oficial do Restic](https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html#rest-server):
 
 ```
 export RESTIC_REST_USERNAME=<MY_REST_SERVER_USERNAME>
@@ -262,22 +266,22 @@ No seu caso, substituindo:
 
 ```plaintext
 <MY_REST_SERVER_USERNAME> →  restserver  
-<MY_REST_SERVER_PASSWORD> →  SENHA_DO_USUARIO
+<MY_REST_SERVER_PASSWORD> →  restserver
 ```
 
 Exemplo:
 
 ```
-export RESTIC_REST_USERNAME=restserver
-export RESTIC_REST_PASSWORD="SENHA_DO_USUARIO"
+export RESTIC_REST_USERNAME=MeuUsuarioRestServer
+export RESTIC_REST_PASSWORD=MinhaSenhaForte123
 ```
 
-### **📖 Como fazer isso no cliente Backrest (interface gráfica)**
+### **📖 Como fazer isso no cliente Backrest (Software de Backup Oficial da administração pública)**
 > 📖 Leia o manual ["Instalando e configurando o cliente Backrest"](https://github.com/pmbatatais/backup-client)
 
-No **Backrest**, ao adicionar ou editar um repositório Rest Server:
+No **Backrest**, ao adicionar ou editar um repositório Rest Server, você irá:
 
-- Clique em **+ Add Repo** ou edite o repositório atual;
+- Clicar em **+ Add Repo** ou editar o repositório atual;
 - Na tela de configuração, clique em **+ Set Environment Var**
 - Adicione a primeira variável:
 
@@ -291,8 +295,6 @@ RESTIC_REST_USERNAME=restserver
 ```shell
 RESTIC_REST_PASSWORD=SENHA_DO_USUARIO
 ```
-
-👋 O Backrestic enviará essas variáveis para o **Restic** durante a conexão, permitindo autenticação no `Rest Server` via **Basic Auth**.
 
 ---
 
