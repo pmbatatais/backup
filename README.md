@@ -178,7 +178,9 @@ Este capítulo explica como disponibilizar seu **Rest Server** na web usando **N
 
 ---
 
+
 ### **1️⃣ Estrutura do Nginx no FreeBSD**
+
 
 - Arquivo principal:
 
@@ -194,11 +196,25 @@ Este capítulo explica como disponibilizar seu **Rest Server** na web usando **N
 
 O Nginx **não precisa estar instalado no mesmo servidor onde o Rest Server está rodando**.  
 Esse detalhe é muito importante, especialmente em ambientes onde há separação de funções — como na [Prefeitura de Batatais](https://github.com/pmbatatais), onde o Nginx já está instalado no servidor do **Batatais Drive (Nextcloud)**.\
-Se for o caso, basta se conectar no servidor **Nextcloud** e adicionar os novos arquivos em `/usr/local/etc/sites.d/nextcloud.domain.conf`
+Se for o caso, basta se conectar ao servidor **Nextcloud** e adicionar os novos arquivos em `/usr/local/etc/sites.d/`
 > Leia os manuais do nextcloud no [repositório oficial](https://github.com/pmbatatais/batatais-drive)
 
 ---
+### **1️⃣ Conectando-se ao servidor Web**
+> Todos os comandos desta sessão deverão ser realizados no servidor WEB, onde o NGINX está instalado.
 
+```shell
+ssh usuario@ip_servidor_web -p porta_ssh
+```
+
+Exemplo:
+
+```shell
+ssh admin@192.168.1.100 -p 65022
+```
+> Dados do servidor web da Prefeitura de Batatais.
+
+---
 ### **2️⃣ Criando o arquivo de autenticação Basic Auth**
 
 Para proteger o servidor REST contra clientes não autorizados, você pode configurar a autenticação básica HTTP, assim o cliente deverá inserir credenciais válidas para se autenticar.
@@ -287,36 +303,32 @@ RESTIC_REST_PASSWORD=SENHA_DO_USUARIO
 > ⚠️ Atenção: Este manual não cobre a criação de domínios/virtual hosts no Nginx.\
 > 🤔 Se o arquivo do seu domínio ainda não existir, o técnico deverá criá-lo seguindo a documentação oficial do Nginx ou manuais disponíveis na internet.
 
-Adicione este bloco dentro do seu `server { … }` já existente:
+Adicione o seguinte bloco `location` dentro do bloco `server { … }` HTTPS (onde **listen** é igual a 443):
+> No Servidor **Nextcloud**, adicione a `location` em `/usr/local/etc/nginx/sites.d/nextcloud.domain.conf`
 
 ```nginx
-
 # Rest Server em um virtual host
 location ^~ /restserver/ {
 
 	auth_basic "Restricted Backup Area";
 	auth_basic_user_file /usr/local/etc/nginx/passwords/RESTSERVER;
-
 	client_max_body_size 0;
 	client_body_buffer_size 128k;
-
 	gzip off;
-
 	proxy_pass http://192.168.1.120:8000/;
 	proxy_http_version 1.1;
 	proxy_request_buffering off;
 	proxy_buffering off;
 	proxy_read_timeout 3600s;
 	proxy_send_timeout 3600s;
-
 	proxy_set_header Host $host;
 	proxy_set_header X-Real-IP $remote_addr;
 	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 	proxy_set_header X-Forwarded-Proto $scheme;
 	proxy_set_header X-Forwarded-User $remote_user;
-
 	keepalive_requests 1000;
 	keepalive_timeout 65;
+
 }
 ```
 
