@@ -169,6 +169,293 @@ sudo service rest_server status
 
 ---
 
+## **🌐 Publicando o Rest Server em um domínio ou subdomínio usando Nginx**
+
+Este capítulo explica como disponibilizar seu **Rest Server** na web usando **Nginx**, com autenticação, SSL via Certbot e suporte tanto para:
+
+✅ **Subpasta:** `https://meudominio.com/restserver`  
+✅ **Subdomínio:** `https://backup.meudominio.com`
+
+---
+
+### **1️⃣ Estrutura do Nginx no FreeBSD**
+
+- Arquivo principal:
+
+```
+/usr/local/etc/nginx.conf
+```
+
+- Arquivos individuais por domínio:
+
+```
+/usr/local/etc/sites.d/
+```
+
+O Nginx **não precisa estar instalado no mesmo servidor onde o Rest Server está rodando**.  
+Esse detalhe é muito importante, especialmente em ambientes onde há separação de funções — como na [Prefeitura de Batatais](https://github.com/pmbatatais), onde o Nginx já está instalado no servidor do **Batatais Drive (Nextcloud)**.\
+Se for o caso, basta se conectar no servidor **Nextcloud** e adicionar os novos arquivos em `/usr/local/etc/sites.d/nextcloud.domain.conf`
+> Leia os manuais do nextcloud no [repositório oficial](https://github.com/pmbatatais/batatais-drive)
+
+---
+
+### **2️⃣ Criando o arquivo de autenticação Basic Auth**
+
+Para proteger o servidor REST contra clientes não autorizados, você pode configurar a autenticação básica HTTP, assim o cliente deverá inserir credenciais válidas para se autenticar.
+> Basic HTTP Auth deve ser usado apenas em conexeções HTTPS pois a requisição é criptografada de ponta a ponta. 
+
+Crie o arquivo **RESTSERVER** para autenticação:
+
+- Usuário: restserver
+- Senha: "SENHA_DO_USUARIO"
+> Mude `SENHA_DO_USUARIO` para uma senha forte!
+
+```shell
+mkdir -p /usr/local/etc/nginx/passwords & \
+openssl passwd -apr1 "SENHA_DO_USUARIO" | \
+sed 's/^/restserver:/' > /usr/local/etc/nginx/passwords/RESTSERVER
+```
+
+Arquivo final criado automaticamente:
+
+```shell
+/usr/local/etc/nginx/passwords/RESTSERVER
+```
+
+### **✅ Como usar o usuário e senha ao conectar-se ao Rest Server (cliente Restic ou Backrestic)**
+
+Quando você cria o arquivo:
+
+```
+/usr/local/etc/nginx/passwords/RESTSERVER
+```
+
+Ele contém:
+
+- **Usuário:** `restserver`
+- **Senha:** a que você definiu em `SENHA_DO_USUARIO`
+
+Para que o cliente **Restic** consiga autenticar no Rest Server protegido por Basic Auth, é necessário definir **duas variáveis de ambiente**, [conforme a documentação oficial do Restic](https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html#rest-server):
+
+```
+export RESTIC_REST_USERNAME=<MY_REST_SERVER_USERNAME>
+export RESTIC_REST_PASSWORD=<MY_REST_SERVER_PASSWORD>
+```
+
+No seu caso, substituindo:
+
+```plaintext
+<MY_REST_SERVER_USERNAME> →  restserver  
+<MY_REST_SERVER_PASSWORD> →  SENHA_DO_USUARIO
+```
+
+Exemplo:
+
+```
+export RESTIC_REST_USERNAME=restserver
+export RESTIC_REST_PASSWORD="SENHA_DO_USUARIO"
+```
+
+### **📖 Como fazer isso no cliente Backrest (interface gráfica)**
+> 📖 Leia o manual ["Instalando e configurando o cliente Backrest"](https://github.com/pmbatatais/backup-client)
+
+No **Backrest**, ao adicionar ou editar um repositório Rest Server:
+
+- Clique em **+ Add Repo** ou edite o repositório atual;
+- Na tela de configuração, clique em **+ Set Environment Var**
+- Adicione a primeira variável:
+
+```shell
+RESTIC_REST_USERNAME=restserver
+```
+
+- Clique novamente em **+ Set Environment Var**
+- Adicione a segunda variável:
+
+```shell
+RESTIC_REST_PASSWORD=SENHA_DO_USUARIO
+```
+
+👋 O Backrestic enviará essas variáveis para o **Restic** durante a conexão, permitindo autenticação no `Rest Server` via **Basic Auth**.
+
+---
+
+### **✅ 3. Publicando o Rest Server em um VIRTUAL HOST**
+
+(ex.: `https://meudominio.com/restserver`)
+
+> ⚠️ Atenção: Este manual não cobre a criação de domínios/virtual hosts no Nginx.\
+> 🤔 Se o arquivo do seu domínio ainda não existir, o técnico deverá criá-lo seguindo a documentação oficial do Nginx ou manuais disponíveis na internet.
+
+Adicione este bloco dentro do seu `server { … }` já existente:
+
+```nginx
+
+# Rest Server em um virtual host
+location ^~ /restserver/ {
+
+	auth_basic "Restricted Backup Area";
+	auth_basic_user_file /usr/local/etc/nginx/passwords/RESTSERVER;
+
+	client_max_body_size 0;
+	client_body_buffer_size 128k;
+
+	gzip off;
+
+	proxy_pass http://192.168.1.120:8000/;
+	proxy_http_version 1.1;
+	proxy_request_buffering off;
+	proxy_buffering off;
+	proxy_read_timeout 3600s;
+	proxy_send_timeout 3600s;
+
+	proxy_set_header Host $host;
+	proxy_set_header X-Real-IP $remote_addr;
+	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	proxy_set_header X-Forwarded-Proto $scheme;
+	proxy_set_header X-Forwarded-User $remote_user;
+
+	keepalive_requests 1000;
+	keepalive_timeout 65;
+}
+```
+
+> ⚠️ Atenção: `192.168.1.120:8000` é o IP e porta padrão do servidor **rest server**.\
+> 🧐 Lembre-se de alterar o parâmetro `proxy-pass` para o ip e porta corretos.
+
+Exemplo de um arquivo de domínio completo:
+
+```nginx
+server {
+
+  listen 443 ssl;
+  server_name batatais.sp.gov.br;
+	
+	# Include para cabeçalhos de segurança
+	include snippets/ssl-batatais.conf;
+	include snippets/ssl-params.conf;
+	
+	# Enable HTTP/2 for better performance
+	http2 on;
+
+  # Rest Server em um virtual host
+  location ^~ /restserver/ {
+  
+    auth_basic "Restricted Backup Area";
+    auth_basic_user_file /usr/local/etc/nginx/passwords/RESTSERVER;
+  
+    client_max_body_size 0;
+    client_body_buffer_size 128k;
+  
+    gzip off;
+  
+    proxy_pass http://192.168.1.120:8000/;
+    proxy_http_version 1.1;
+    proxy_request_buffering off;
+    proxy_buffering off;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+  
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-User $remote_user;
+  
+    keepalive_requests 1000;
+    keepalive_timeout 65;
+  }
+
+}
+```
+
+---
+
+### **✅ 4. Publicando o Rest Server em um SUBDOMÍNIO**
+
+(ex.: `https://restserver.meudominio.com`)
+
+Crie o arquivo:
+
+```
+/usr/local/etc/sites.d/restserver.meudominio.com.conf
+```
+
+#### **✅ Configuração recomendada:**
+
+```nginx
+server {
+
+    listen 80;
+    server_name restserver.meudominio.com;
+
+    # Inclui headers de segurança
+    include /usr/local/etc/nginx/snippets/ssl-params.conf;
+
+    location / {
+	
+        auth_basic "Área Restrita";
+        auth_basic_user_file /usr/local/etc/nginx/passwords/RESTSERVER;
+
+        client_max_body_size 0;
+        client_body_buffer_size 128k;
+        gzip off;
+
+        proxy_pass http://192.168.1.120:8000/;
+        proxy_http_version 1.1;
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-User $remote_user;
+
+        keepalive_requests 1000;
+        keepalive_timeout 65;
+    }
+}
+```
+
+#### **🔐 Criando certificados SSL (domínio + subdomínio)**
+
+Se você tiver múltiplos subdomínios → **deve listar todos** no Certbot.
+
+Exemplo (para multiplos subdomínios):
+
+```shell
+certbot --nginx -d meudominio.com -d glpi.meudominio.com -d nextcloud.meudominio.com -d restserver.meudominio.com
+```
+
+Exemplo (domínio + subdomínio do Rest Server):
+
+```shell
+certbot --nginx -d meudominio.com -d restserver.meudominio.com
+```
+
+---
+
+### **✅ 5. Testar e recarregar o Nginx**
+
+```
+nginx -t
+service nginx reload
+```
+
+---
+
+### **✅ 7. Subpasta vs Subdomínio — qual escolher?**
+
+| **Método**     | **URL**                       | **Quando usar**                             |
+|------------|---------------------------|-----------------------------------------|
+| **Subpasta**   | meudominio.com/restserver | Simples, quando não quer criar DNS      |
+| **Subdomínio** | backup.meudominio.com     | Isolado, profissional, ideal pra backup |
+
+---
+
 ## **🔗 Referências**
 
 - Projeto **Rest Server**: <https://github.com/restic/rest-server>
