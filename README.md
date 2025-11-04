@@ -1,205 +1,205 @@
 # 🏛️ Backup – Ambiente de backup com REST Server, Restic e Backrest
-Este repositório consolida a **documentação oficial da Prefeitura Municipal de Batatais** referente ao ambiente padronizado de backup utilizado nos equipamentos institucionais.  
+Este repositório consolida a **documentação oficial da Prefeitura Municipal de Batatais** referente ao ambiente padronizado de backup utilizado em todos os equipamentos institucionais.
 
-O objetivo é garantir **uniformidade**, **segurança da informação**, **rastreabilidade** e **facilidade de manutenção** em toda a infraestrutura municipal.
+Nosso objetivo é garantir:
 
-Nosso objetivo é oferecer um ambiente:
-
-- ✅ Seguro  
-- ✅ Confiável  
-- ✅ Escalável  
-- ✅ Fácil de administrar  
-- ✅ Padronizado entre todos os setores  
-
-Este material inclui:
-
-- Descrição dos componentes do sistema 
-- Instalação completa do servidor e clientes
-- Diretrizes oficiais adotadas pelo Setor de TI
+- ✅ Segurança da informação
+- ✅ Uniformidade técnica
+- ✅ Rastreabilidade
+- ✅ Desempenho e escalabilidade
+- ✅ Facilidade de manutenção
+- ✅ Padronização entre setores
 
 ---
-## 📚 Documentação oficial da Prefeitura
+# 📚 Documentação municipal
 
-### ✅ 1. Instalação do Servidor (REST Server)
-👉 [**Acessar Tutorial Oficial**](https://github.com/pmbatatais/backup-server)
+### ✅ 1. Servidor de Backup – REST Server
 
-### ✅ 2. Instalação do Cliente (Backrest + Restic)
-👉 [**Acessar Tutorial Oficial**](https://github.com/pmbatatais/backup-client)
+👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup-server](https://github.com/pmbatatais/backup-server)
+
+### ✅ 2. Cliente de Backup – Backrest + Restic
+
+👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
 
 ### ✅ 3. Como fazer backup
+
 🚧 _Documento em elaboração_
 
 ### ✅ 4. Como restaurar dados
+
 🚧 _Documento em elaboração_
 
-### ✅ 5. Solução de Problemas
+### ✅ 5. Solução de problemas
+
 🚧 _Documento em elaboração_
 
 ---
-## 🧭 Introdução — Por que padronizamos este ambiente?
+# 🧭 Introdução — Por que padronizamos este ambiente?
 
-Ao longo dos anos, diversas tecnologias de backup foram utilizadas ou testadas na Prefeitura.  
-Algumas funcionaram bem no passado, mas não atendem mais às exigências atuais de:
+Durante anos, diferentes ferramentas de backup foram utilizadas na Prefeitura, cada uma com limitações que já não atendem às demandas atuais, como:
 
-- Grande volume de arquivos  
-- Necessidade de restaurações rápidas  
-- Segurança contra ataques recentes  
-- Simplicidade de auditoria  
-- Integridade dos dados  
-- Criptografia e proteção legal  
+- Crescimento do volume de arquivos
+- Necessidade de restaurações rápidas e confiáveis
+- Segurança contra ataques modernos
+- Auditoria simples e padronizada
+- Integridade e criptografia ponta a ponta
 
-As ferramentas legadas incluíam:
+Ferramentas antigas apresentavam problemas significativos:
+
 ### ❌ Cobian Backup via FTP
 
-Ainda presente no setor de Compras (mas **não administrado pelo TI**).  
-Problemas:
+Ainda presente no setor do Compras, mas **não administrado pelo TI**.  
+Problemas principais:
 
-- Sem criptografia  
-- FTP é inseguro e obsoleto  
-- Restaurações lentas  
-- Estrutura frágil  
-- Projeto abandonado  
+- Uso de FTP (protocolo inseguro)
+- Falta de criptografia
+- Restaurações lentas
+- Estrutura propensa a falhas
+- Projeto abandonado
 
-### ❌ Duplicati 
-Pontos positivos: fácil instalação e interface bonita.  
-Mas apresenta falhas graves em ambientes institucionais:
+### ❌ Duplicati
+
+Apesar da interface amigável, não é adequado para ambiente institucional:
 
 - Depende de banco de dados interno
-- Restaurações grandes podem travar por horas
-- Inconsistência de dados com volumes elevados
-- Lentidão significativa
-- Alta taxa de falhas sob carga
-- Dificuldade de manutenção  
+- Travamentos em restaurações grandes
+- Lentidão sob alto volume
+- Inconsistência em cargas elevadas
+- Difícil manutenção em escala
 
 ---
-## 🚀 A solução moderna
+## 🚀 A Solução Moderna Adotada
 
-Para substituir todas as tecnologias antigas e garantir **robustez**, a Prefeitura adotou um conjunto moderno e corporativo:
-### **REST Server + Restic + Backrest**
+Para atender às necessidades institucionais, padronizamos um ambiente corporativo robusto:
+
+### ✅ **REST Server + Restic + Backrest**
+
+Essa combinação oferece:
+
+- Criptografia ponta a ponta
+- Deduplicação inteligente
+- Snapshots versionados
+- Padronização absoluta
+- Restaurações rápidas
+- Alta confiabilidade
+- Baixo consumo de recursos
+- Execução automatizada e auditável
 
 ---
-## 🔗 Visão Geral - Como tudo funciona
+## 🔗 Arquitetura — Como tudo funciona
 
-Antes da implantação, é essencial compreender o papel de cada elemento na arquitetura.
+Antes da implantação, é necessário entender o papel de cada componente:
 
-> 🧠 Repositório é o **local onde os backups ficam armazenados** no servidor **REST Server**.
-
-| Componente      | Função                                                   | Local de Execução            |
-| --------------- | -------------------------------------------------------- | ---------------------------- |
-| **REST Server** | Armazenamento dos repositórios Restic                    | Servidor central             |
-| **Restic**      | Motor de backup (criptografia, deduplicação e snapshots) | Estações/Servidores clientes |
-| **Backrest**    | Cliente WEB que opera o Restic automaticamente           | Estações/Servidores clientes |
+|Componente|Função|Onde roda|
+|---|---|---|
+|**REST Server**|Armazenamento dos repositórios Restic|Servidor central|
+|**Restic**|Motor de backup (criptografia, deduplicação, snapshots)|Estações/Servidores clientes|
+|**Backrest**|Automação do Restic com interface Web|Estações/Servidores clientes|
 
 Benefícios institucionais:
 
 - ✅ Segurança elevada
-- ✅ Padronização absoluta
-- ✅ Facilidade de auditoria
-- ✅ Restaurações rápidas
+- ✅ Restaurações rápidas e confiáveis
+- ✅ Auditoria simples
+- ✅ Padronização total
 - ✅ Redução de espaço por deduplicação
-- ✅ Resiliência contra ataques e corrupção
+- ✅ Resiliência contra falhas e ataques
 - ✅ Independência entre setores e máquinas
 
 ---
-## 🖥️ REST Server (Servidor de Repositórios Restic)
+## 🖥️ REST Server
 
-🔗 **Site oficial:** [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
+🔗 [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
 
-O **REST Server** é o serviço responsável por hospedar os **[^1]repositórios** utilizados pelos clientes Restic. Ele **não faz backup por si só**: apenas recebe e organiza os dados enviados pelos clientes.
-REST Server foi projetado para ser **leve**, **eficiente** e altamente confiável, implementando apenas o necessário da API REST utilizada pelo Restic.
+O **REST Server** é o serviço responsável por hospedar os repositórios utilizados pelos clientes Restic.  
+Ele **não executa backups por conta própria**: sua função é armazenar e organizar os dados enviados.
 
-Características principais:
+Principais características:
 
-- ✅ Projeto ativo e confiável
-- ✅ Extremamente leve
-- ✅ Altíssimo desempenho
-- ✅ Função estritamente de **servidor de armazenamento**
-- ✅ Opera com baixo consumo de recursos
-- ✅ Ideal para ambientes corporativos com alta demanda de padronização
+- ✅ Extremamente leve e rápido
+- ✅ Consumo mínimo de recursos
+- ✅ Alta confiabilidade
+- ✅ Função exclusiva de servidor de armazenamento
+- ✅ Implementa apenas o necessário para o Restic
 
-Este é o componente central que recebe, organiza e mantém os dados enviados pelos clientes autorizados.
-
-🗂️ **Pense nele como o “armário seguro” onde os backups ficam organizados.**
+> 🗂️ Pense nele como o _cofre institucional_ onde os backups ficam organizados.
 
 ---
-## 🧩 Restic (Motor de backup)
+## 🧩 Restic — Motor de Backup
 
-🔗 **Site oficial:** [https://restic.net/](https://restic.net/)  
-🔗 **GitHub:** [https://github.com/restic/restic](https://github.com/restic/restic)
+🔗 Site oficial: [https://restic.net](https://restic.net)  
+🔗 Repositório: [https://github.com/restic/restic](https://github.com/restic/restic)
 
-O **Restic** é a ferramenta principal de backup utilizada nas máquinas da Prefeitura.  
-Ele é o responsável por todos os mecanismos críticos de segurança e eficiência, entre eles:
+O **Restic** é o responsável por toda a lógica de backup nas máquinas clientes.  
+Ele garante:
 
-- 🔒 **Criptografia ponta a ponta** (os dados são protegidos antes mesmo de deixar o cliente)
-- 📦 **Deduplicação** (reduz espaço de armazenamento)
-- 🔁 **Snapshots versionados**
-- 🗂️ Organização do repositório remoto
-- 🔍 Processos rápidos de restauração
-### Por que Restic?
+- 🔒 Criptografia ponta a ponta
+- 📦 Deduplicação inteligente
+- 🔁 Snapshots versionados
+- 🚀 Restaurações rápidas
+- 🛠️ Operação estável sem banco de dados interno
 
-- Extremamente rápido mesmo com milhões de arquivos;
-- Restaurações confiáveis e instantâneas;
-- Sem banco interno → **nada corrompe**  
-- Arquitetura moderna;
-- Adequado para máquinas lentas e redes mistas;
+Por que o Restic foi adotado?
 
-Fluxo simplificado:
+- Altíssimo desempenho com milhões de arquivos
+- Comportamento consistente em máquinas lentas
+- Baixo risco de corrupção
+- Arquitetura moderna e confiável
 
-`Cliente Restic  →  Criptografa + Deduplica  →  Envia ao REST Server`
-
----
-## 📦 Backrest (Cliente de Backup Padronizado da Prefeitura)
-
-🔗 **Repositório oficial:** [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)  
-🔗 **Documentação:** [https://garethgeorge.github.io/backrest/introduction/getting-started/](https://garethgeorge.github.io/backrest/introduction/getting-started/)
-
-O **Backrest** é o cliente de backup corporativo utilizado nos computadores da Prefeitura.  
-Ele garante que **toda máquina** da Prefeitura execute backups regularmente sem intervenção do usuário.
-
-Ele foi adotado devido a:
-  
-- ✅ Operação automatizada por serviço  
-- ✅ Logs organizados para auditoria  
-- ✅ Suporte a políticas de retenção  
-- ✅ Baixa intervenção do usuário  
-- ✅ Padronização entre setores e secretarias
-
-O Backrest realiza automaticamente:
-
-- Inclusão/exclusão de diretórios definidos pelo administrador
-- Execução periódica de backups
-- Limpeza automatizada conforme política de retenção
-- Administração das variáveis e parâmetros do Restic
-- Funcionalidade silenciosa em segundo plano
-
-Essa ferramenta garante que o ambiente institucional siga práticas modernas de backup, reduzindo riscos de perda de dados e assegurando governança.
+Fluxo simplificado:  
+**Cliente → Criptografa + Deduplica → Envia ao REST Server**
 
 ---
-## ✅ Conclusão
+## 📦 Backrest — Cliente Padronizado de Backup
 
-O ambiente REST Server + Restic + Backrest representa a **melhor solução moderna** para proteger os dados da Prefeitura Municipal de Batatais.
+🔗 Repositório: [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)  
+🔗 Documentação: [https://garethgeorge.github.io/backrest/introduction/getting-started/](https://garethgeorge.github.io/backrest/introduction/getting-started/)
 
-Ele supera completamente tecnologias antigas como **Cobian FTP** e **Duplicati**, oferecendo um sistema:
+O **Backrest** é o cliente corporativo responsável por operar o Restic automaticamente em todas as máquinas da Prefeitura.
 
-- Seguro
-- Integrado  
-- Escalável
-- Altamente confiável
-- Simples de administrar
+Motivos da adoção:
+
+- ✅ Executa backups de forma automatizada
+- ✅ Trabalha como serviço silencioso
+- ✅ Registra logs estruturados para auditoria
+- ✅ Gerencia políticas de retenção
+- ✅ Mantém a padronização entre setores
+
+Funções automáticas:
+
+- Inclusão/exclusão de diretórios configurados pelo TI
+- Execução regular dos backups
+- Limpeza do repositório com base nas políticas
+- Administração dos parâmetros do Restic
+- Funcionamento contínuo sem intervenção do usuário
 
 ---
-## ✅ Créditos
+# 🚩 Conclusão
 
-- **REST Server** – [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
-- **Restic** – [https://restic.net](https://restic.net)
-- **Backrest** – [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)
+O ambiente **REST Server + Restic + Backrest** representa a **solução institucional moderna e definitiva** adotada pela Prefeitura Municipal de Batatais.
+
+Ele substitui por completo soluções antigas como Cobian FTP e Duplicati, oferecendo:
+
+- Segurança
+- Escalabilidade
+- Confiabilidade
+- Consistência
+- Auditoria simplificada
+- Restaurações rápidas e estáveis
+- Padronização entre todos os setores
 
 ---
-## 📜 Autor Técnico
+# 📢 Créditos
+
+- **REST Server** — [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
+- **Restic** — [https://restic.net](https://restic.net)
+- **Backrest** — [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)
+
+---
+# 📜 Autor Técnico
 
 **Leonardo Ribeiro**  
-*Setor de Tecnologia da Informação*
-Prefeitura Municipal de Batatais 
-Responsável pela padronização do ambiente de backup, documentação técnica e implantação da infraestrutura.
+Setor de Tecnologia da Informação  
+Prefeitura Municipal de Batatais
 
-[^1]: O repositório é o **local onde os backups ficam armazenados** no servidor **REST Server**.
+Responsável pela padronização do ambiente de backup, documentação técnica e implantação da infraestrutura.
