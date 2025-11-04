@@ -174,15 +174,12 @@ sudo service rest_server status
 Este capítulo explica como disponibilizar seu **Rest Server** na web usando **Nginx**, com autenticação, SSL via Certbot e suporte tanto para:
 
 ✅ **Subpasta:** `https://meudominio.com/restserver`  
-✅ **Subdomínio:** `https://backup.meudominio.com`
+✅ **Subdomínio:** `https://restserver.meudominio.com`
 
-> 🧠 Adotamos `meudominio.com` como o domínio oficial deste tutorial. Obviamente que você deverá substituri `meudominio.com` por um domínio totalmente qualificado.
-
----
-
+> 🧠 Adotamos `meudominio.com` para fim de aprendizado. Obviamente que você deverá substituir `meudominio.com` por um domínio registrado na internet.
 
 ### **1️⃣ Estrutura do Nginx no FreeBSD**
-
+> 💡 O Nginx **não precisa estar instalado no mesmo servidor onde o Rest Server está rodando**. 
 
 - Arquivo principal:
 
@@ -192,18 +189,12 @@ Este capítulo explica como disponibilizar seu **Rest Server** na web usando **N
 
 - Arquivos individuais por domínio:
 
-```
-/usr/local/etc/sites.d/
+```plaintext
+/usr/local/etc/nginx/sites.d/ ou /usr/local/etc/nginx/sites-available/
 ```
 
-O Nginx **não precisa estar instalado no mesmo servidor onde o Rest Server está rodando**.  
-Esse detalhe é muito importante, especialmente em ambientes onde há separação de funções — como na [Prefeitura de Batatais](https://github.com/pmbatatais), onde o Nginx já está instalado no servidor do **Batatais Drive (Nextcloud)**.\
-Se for o caso, basta se conectar ao servidor **Nextcloud** e adicionar os novos arquivos em `/usr/local/etc/sites.d/`
-> Leia os manuais do nextcloud no [repositório oficial](https://github.com/pmbatatais/batatais-drive)
-
----
 ### **1️⃣ Conectando-se ao servidor Web**
-> Todos os comandos desta sessão deverão ser realizados no servidor WEB, onde o NGINX está instalado.
+> Todos os comandos a seguir deverão ser realizados no servidor WEB, onde o NGINX está instalado.
 
 ```shell
 ssh usuario@ip_servidor_web -p porta_ssh
@@ -212,11 +203,9 @@ ssh usuario@ip_servidor_web -p porta_ssh
 Exemplo:
 
 ```shell
-ssh admin@192.168.1.100 -p 65022
+ssh admin@192.168.1.3 -p 22
 ```
-> Dados do servidor web da Prefeitura de Batatais.
 
----
 ### **2️⃣ Criando o arquivo de autenticação Basic Auth**
 
 Para proteger o servidor REST contra clientes não autorizados, você pode configurar a **autenticação básica HTTP** (ou simplesmente **Basic Auth**).
@@ -226,15 +215,16 @@ Assim, apenas clientes com as credenciais poderão salvar dados.
 
 Crie o arquivo **RESTSERVER** para autenticação:
 
-- Usuário: restserver
-- Senha: restserver
-> Certifique-se de definir credenciais fortes!
-
 ```shell
 mkdir -p /usr/local/etc/nginx/passwords && \
 openssl passwd -apr1 "restserver" | \
 sed 's/^/restserver:/' > /usr/local/etc/nginx/passwords/RESTSERVER
 ```
+> ⚡ Altere o argumento -apr1 `"restserver"` para uma senha forte!
+
+- Usuário: restserver
+- Senha: restserver
+> Certifique-se de definir credenciais fortes!
 
 Arquivo final criado automaticamente:
 
@@ -242,7 +232,7 @@ Arquivo final criado automaticamente:
 /usr/local/etc/nginx/passwords/RESTSERVER
 ```
 
-### **✅ Como usar o usuário e senha ao conectar-se ao Rest Server (cliente Restic ou Backrestic)**
+**✅ Como usar o usuário e senha ao conectar-se ao Rest Server (cliente Restic ou Backrestic)**
 
 Quando você cria o arquivo:
 
@@ -276,7 +266,7 @@ export RESTIC_REST_USERNAME=MeuUsuarioRestServer
 export RESTIC_REST_PASSWORD=MinhaSenhaForte123
 ```
 
-### **📖 Como fazer isso no cliente Backrest (Software de Backup Oficial da administração pública)**
+**📖 Como fazer isso no cliente Backrest (Software de Backup Oficial da administração pública)**
 > 📖 Leia o manual ["Instalando e configurando o cliente Backrest"](https://github.com/pmbatatais/backup-client)
 
 No **Backrest**, ao adicionar ou editar um repositório Rest Server, você irá:
@@ -296,9 +286,7 @@ RESTIC_REST_USERNAME=restserver
 RESTIC_REST_PASSWORD=SENHA_DO_USUARIO
 ```
 
----
-
-### **✅ 3. Publicando o Rest Server em um VIRTUAL HOST**
+### **3️⃣ Publicando o Rest Server em um VIRTUAL HOST**
 
 (ex.: `https://meudominio.com/restserver`)
 
@@ -383,16 +371,15 @@ server {
 }
 ```
 
----
-
-### **✅ 4. Publicando o Rest Server em um SUBDOMÍNIO**
+### **4️⃣ Publicando o Rest Server em um SUBDOMÍNIO**
+Se você preferir, publique o Servidor Rest Server em um subdomínio
 
 (ex.: `https://restserver.meudominio.com`)
 
-Crie o arquivo:
+- **✍🏼 Crie o arquivo de configurações**:
 
-```
-/usr/local/etc/sites.d/restserver.meudominio.com.conf
+```shell
+touch /usr/local/etc/sites.d/restserver.domain.conf
 ```
 
 #### **✅ Configuração recomendada:**
@@ -434,9 +421,9 @@ server {
 }
 ```
 
-#### **🔐 Criando certificados SSL (domínio + subdomínio)**
+- **🔐 Crie os certificados SSL (domínio + subdomínio)**:
 
-Se você tiver múltiplos subdomínios → **deve listar todos** no Certbot.
+🤔 Se você tiver múltiplos subdomínios → **deve listar todos** no Certbot.
 
 Exemplo (para multiplos subdomínios):
 
@@ -444,29 +431,19 @@ Exemplo (para multiplos subdomínios):
 certbot --nginx -d meudominio.com -d glpi.meudominio.com -d nextcloud.meudominio.com -d restserver.meudominio.com
 ```
 
+
 Exemplo (domínio + subdomínio do Rest Server):
 
 ```shell
 certbot --nginx -d meudominio.com -d restserver.meudominio.com
 ```
 
----
+### **5️⃣ Testar e recarregar o Nginx**
 
-### **✅ 5. Testar e recarregar o Nginx**
-
-```
+```shell
 nginx -t
-service nginx reload
+service nginx restart
 ```
-
----
-
-### **✅ 7. Subpasta vs Subdomínio — qual escolher?**
-
-| **Método**     | **URL**                       | **Quando usar**                             |
-|------------|---------------------------|-----------------------------------------|
-| **Subpasta**   | meudominio.com/restserver | Simples, quando não quer criar DNS      |
-| **Subdomínio** | backup.meudominio.com     | Isolado, profissional, ideal pra backup |
 
 ---
 
