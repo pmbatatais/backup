@@ -11,7 +11,7 @@ Nosso objetivo é garantir:
 - ✅ Padronização entre setores
 
 ---
-# 📚 Documentação municipal
+## 📚 Documentação municipal
 
 ### ✅ 1. Servidor de Backup – REST Server
 
@@ -34,7 +34,7 @@ Nosso objetivo é garantir:
 🚧 _Documento em elaboração_
 
 ---
-# 🧭 Introdução — Por que padronizamos este ambiente?
+## 🧭 Introdução — Por que padronizamos este ambiente?
 
 Durante anos, diferentes ferramentas de backup foram utilizadas na Prefeitura, cada uma com limitações que já não atendem às demandas atuais, como:
 
@@ -66,6 +66,75 @@ Apesar da interface amigável, não é adequado para ambiente institucional:
 - Lentidão sob alto volume
 - Inconsistência em cargas elevadas
 - Difícil manutenção em escala
+
+---
+## 🏢 Ambiente atual da infraestrutura de backup
+
+A Prefeitura Municipal de Batatais atualmente possui dois cenários distintos de armazenamento e proteção de dados. A compreensão desse cenário é essencial para justificar a padronização definida neste repositório.
+
+### **1) Servidor de Arquivos — Secretaria de Obras e Planejamento**
+
+Foi implantado um servidor dedicado com a seguinte estrutura:
+
+- **Sistema Operacional:** Debian 12
+- **Local**: Secretaria de Obras e Planejamento
+- **IP**: 192.168.1.11
+- **Interface gráfica:** habilitada
+- **Compartilhamento:** via Samba
+- **Uso:** armazenamento de arquivos setoriais
+- **Backup:** automatizado pelo **Backrest**, enviando dados a cada **4 horas** para o **REST Server oficial** localizado no prédio da Prefeitura.
+
+Este ambiente já segue a **padronização institucional**, utilizando o conjunto Backrest + Restic + REST Server.
+
+---
+### **2) Servidor de Arquivos — Secretaria de Administração**
+
+Existe outro servidor utilizado exclusivamente por:
+
+- Setor de Compras
+- Secretário de Administração
+- Diretor do setor
+
+Condições operacionais:
+
+- **Sistema Operacional:** Windows 7 (desatualizado)
+- **Backup:** Cobian Backup
+- **Método de envio:** FTP para espaço fornecido pela empresa Com4
+- **Acesso técnico:** **inexistente**.
+    
+    - O acesso via AnyDesk, anteriormente configurado, foi removido sem documentação.
+    - Não existe controle técnico, auditoria ou monitoramento do ambiente.
+
+Esse cenário é **crítico**, pois não há garantia de integridade, segurança, atualização ou rastreabilidade. Incidentes como corrupção de arquivos, falhas ou malware podem ocorrer sem detecção.
+
+### ⚠️ Sobre responsabilidade técnica
+
+Ambientes que **não seguem a padronização** e nos quais o TI **não possui acesso administrativo**:
+
+- **não podem ser monitorados**,
+- **não podem ser auditados**,
+- **não oferecem segurança mínima**,
+- **não podem ter sua integridade assegurada**.
+
+Portanto, o TI **não pode ser responsabilizado por qualquer perda, falha ou incidente** relacionado aos equipamentos fora deste ambiente padronizado.
+Recomenda-se a **migração imediata** desse servidor para a solução corporativa definida nesta documentação.
+
+---
+### ⭐ Conclusão desta seção
+
+O cenário atual demonstra a necessidade urgente de:
+
+- Centralização
+- Padronização
+- Criptografia ponta a ponta
+- Controle técnico
+- Auditoria
+- Backup institucional monitorado
+
+A partir deste documento, **o único ambiente oficialmente suportado** é o modelo baseado em:
+
+✅ **REST Server + Restic + Backrest**  
+(com diretrizes, padrões, processos e responsabilidades definidos aqui.)
 
 ---
 ## 🚀 A Solução Moderna Adotada
@@ -174,7 +243,7 @@ Funções automáticas:
 - Funcionamento contínuo sem intervenção do usuário
 
 ---
-# 🚩 Conclusão
+## 🚩 Conclusão
 
 O ambiente **REST Server + Restic + Backrest** representa a **solução institucional moderna e definitiva** adotada pela Prefeitura Municipal de Batatais.
 
@@ -189,14 +258,14 @@ Ele substitui por completo soluções antigas como Cobian FTP e Duplicati, ofere
 - Padronização entre todos os setores
 
 ---
-# 📢 Créditos
+## 📢 Créditos
 
 - **REST Server** — [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
 - **Restic** — [https://restic.net](https://restic.net)
 - **Backrest** — [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)
 
 ---
-# 📜 Autor Técnico
+## 📜 Autor Técnico
 
 **Leonardo Ribeiro**  
 Setor de Tecnologia da Informação  
