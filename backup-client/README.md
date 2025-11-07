@@ -19,7 +19,10 @@ Em ambientes sem interface gráfica — comuns em servidores de produção — a
 
 Exemplo ilustrativo de acesso remoto:
 
-`https://backup.pmbatatais.sp.gov.br`
+```plaintext
+http://10.0.0.100:9898
+https://clientebackup.pmbatatais.sp.gov.br
+```
 
 Por questões de segurança e padronização, este documento **não inclui** informações operacionais sensíveis, como endereços internos, portas, credenciais ou localização física dos servidores. Esses detalhes serão disponibilizados exclusivamente em um **repositório privado da Prefeitura**, acessível somente a colaboradores autorizados.
 
@@ -86,7 +89,7 @@ Principais vantagens:
 - 🔗 Integração direta com REST Server
 
 ---
-# **📘 Conceitos Fundamentais**
+## **📘 Conceitos Fundamentais**
 
 Antes de iniciar a configuração do ambiente, é importante compreender alguns conceitos essenciais que estruturam o funcionamento do Backrest e do Restic. Esses conceitos garantem que o operador tenha clareza sobre os componentes envolvidos no processo de backup, recuperação e manutenção do repositório.
 
