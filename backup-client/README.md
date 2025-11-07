@@ -1,3 +1,4 @@
+
 # **🏛️ Manual de Instalação – Backrest (FreeBSD, Linux e Windows)**
 
 Este guia descreve o processo completo de instalação e configuração do **cliente de backup Backrest**, que será utilizado para enviar backups ao **servidor Rest Server**.  
