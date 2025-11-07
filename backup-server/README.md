@@ -1,48 +1,348 @@
-# **🚀 Guia de Instalação – Servidor de Backup com Rest Server no FreeBSD**
+# **🏛️ Guia de Instalação – Servidor de Backup com Rest Server no FreeBSD**
 
-Este guia descreve como configurar um **servidor de backup** para armazenamento de backups **Restic** usando **Rest Server** 
+Este guia descreve como configurar um **servidor de backup FreeBSD** usando a tecnologia **REST Server**
 
 ---
-
 ## **🙏 Agradecimentos**
 
-O **Rest Server** é mantido pela equipe do [**Restic**](https://github.com/restic/rest-server).  
+O **REST Server** é mantido pela equipe do [**Restic**](https://github.com/restic/rest-server).  
 Meus agradecimentos aos criadores pelo excelente trabalho que torna esta solução possível.
 
-Eu, **Leonardo Ribeiro**, adaptei o script `install.sh` para ser totalmente compatível com **FreeBSD**.  
-Repositório adaptado: <https://github.com/pmbatatais/backup-server.git>
+Também fica o agradecimento ao [**Projeto FreeBSD**](https://www.freebsd.org/), cuja arquitetura consistente, documentação sólida e foco em estabilidade o tornam uma base extremamente confiável para ambientes de produção — e que inspirou a construção deste guia.
 
 ---
+## **📌 Considerações Iniciais**
 
-## **⚙️ Ambiente utilizado**
+Este documento apresenta o procedimento oficial de implantação de um **servidor institucional de backup** baseado em **REST Server**, utilizando **FreeBSD** e armazenamento **ZFS**, conforme o **layout técnico adotado pela Prefeitura Municipal de Batatais**.
 
-- **Sistema operacional:** FreeBSD 14.3
-- **Servidor de backup:** Repositório REST Server. [Leia a página oficial](https://github.com/restic/rest-server)
-- **Armazenamento:**
-  - 2 discos de 1TB em espelhamento (mirror) via ZFS
-  - Pool ZFS: `zroot`
-  - Dataset: `zroot/rest-server`
-  - Mountpoint: `/mnt/backups/rest-server`
-  - Compressão: `lz4`
+O objetivo é fornecer um guia padronizado, seguro e detalhado, permitindo que qualquer técnico autorizado possa instalar ou reinstalar o ambiente com consistência, mantendo compatibilidade com o restante da infraestrutura.
+
+Este manual não contém informações sensíveis, como:
+
+- Senhas reais
+- Endereços de rede internos
+- Estrutura física dos servidores
+- Regras de firewall da Prefeitura
+- Configurações privadas de proxy ou VPN
+
+Esses dados estão disponíveis exclusivamente no **repositório privado da Prefeitura**: 
+
+👉 **Repositório central de backup (privado):**  
+[https://github.com/pmbatatais/backup](https://github.com/pmbatatais/backup)  
+_(Acesso restrito a colaboradores autorizados.)_
+
+Projetos complementares:
+
+- **Cliente Backrest:** [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+- **Nextcloud (Batatais-Drive):** [https://github.com/pmbatatais/batatais-drive](https://github.com/pmbatatais/batatais-drive)
 
 ---
+### **📖 Termos importantes que você encontrará neste manual**
 
-## **💾 Sobre o Servidor REST Server e Backup com Restic**
+Para evitar dúvidas, seguem explicações **breves** dos principais termos:
 
-O **REST Server** é um **servidor HTTP de alta performance** que implementa a **API REST do Restic**, permitindo que clientes Restic façam backups remotos de forma segura e eficiente usando a URL `rest`:
+### 🔹 **FreeBSD**
 
-O **Restic** é uma ferramenta de backup moderna e confiável, que oferece:
+Sistema operacional oficial dos servidores da Prefeitura. É estável, seguro e integra-se perfeitamente ao ZFS.
 
-- 🔒 **Criptografia ponta-a-ponta**: os dados são criptografados no cliente antes de serem enviados, garantindo que ninguém consiga acessá-los sem a chave.
-- 📦 **Deduplicação de dados**: arquivos repetidos não são duplicados, economizando espaço em disco.
+### 🔹 **ZFS**
 
-Combinando **REST Server + Restic**, você cria um **servidor de backup seguro, centralizado e eficiente**, pronto para receber dados de clientes confiáveis.
+Sistema de arquivos avançado que oferece:
+
+- integridade de dados
+- compressão
+- snapshots
+- replicação
+
+É o filesystem **obrigatório** para os repositórios de backup.
+
+### 🔹 **Dataset ZFS**
+
+Uma “subárea” independente dentro do ZFS, usada como diretório dedicado para cada serviço.  
+Exemplo usado neste manual:  
+`/mnt/backups/rest-server`
+
+### 🔹 **REST Server**
+
+O serviço que recebe e armazena os dados enviados pelo Restic.  
+Ele **não** faz backup — apenas armazena repositórios.
+
+### 🔹 **Restic**
+
+O motor CLI que realiza o backup, criptografa arquivos e envia os dados ao REST Server.
+
+### 🔹 **Backrest**
+
+Cliente corporativo utilizado nas máquinas da Prefeitura.  
+Gerencia o Restic, credenciais e políticas de backup.
+
+### 🔹 **Basic Auth**
+
+Autenticação HTTP usada para proteger o REST Server quando ele é publicado via Nginx.
+### 🔹 **Nginx**
+
+Servidor web oficial para publicar o REST Server (e outros sistemas).
 
 ---
+### 🔭 Escopo deste documento
 
-## **📦 Instalação passo a passo**
+#### Este manual cobre exclusivamente:
 
-### **1️⃣ Instalar o Git**
+- Instalação do **REST Server** no **FreeBSD**
+- Criação e configuração do *dataset* ZFS destinado aos repositórios
+- Criação opcional de um usuário SFTP somente leitura
+- A publicação do **REST Server** em um domínio ou subdomínio utilizando **Nginx**
+- O uso de **Basic Auth** para proteger o acesso ao servidor
+- Como o **Backrest** (cliente) utiliza as variáveis de ambiente para autenticação
+
+#### Este documento **não** aborda:
+
+- Políticas internas de retenção de dados
+- Regras administrativas de backup
+- Restauração em produção
+- Troubleshooting avançado
+- Instalação/configuração do Backrest (cliente)
+- Configurações específicas de firewall, VLAN ou VPN
+
+A instalação e operação do cliente **Backrest** estão documentadas separadamente:  
+👉 **Cliente Backrest (instalação oficial):** [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+
+---
+### 🏛️ Padrões Técnicos da Prefeitura Municipal de Batatais
+
+A Prefeitura adota um **layout técnico institucional** para garantir estabilidade, previsibilidade e continuidade. Esses padrões incluem:
+
+- Sistema operacional oficial: **FreeBSD**
+- Sistema de arquivos: **ZFS**
+- Estrutura padronizada de diretórios
+- Uso de **datasets** individuais por serviço
+- Publicação HTTP/HTTPS via **Nginx**
+- Usuários e permissões mínimas por serviço
+
+> ✅ **Seguir o layout institucional é obrigatório** se o servidor fará parte da infraestrutura oficial.
+
+#### ⚠️ Riscos de não seguir o layout:
+
+- Incompatibilidade com automações
+- Quebra de scripts oficiais
+- Repositórios inacessíveis pelo **Backrest**
+- Perda de integridade (sem ZFS)
+- Falta de suporte por outros técnicos
+- Incompatibilidade com serviços relacionados (*Nextcloud*, GLPI, Drive)
+
+Por isso, este manual assume **integralmente** o layout institucional.  
+Qualquer variação deve ser feita **por conta e risco do operador**, e fora dos padrões suportados.
+
+---
+### 👨‍👩‍👧‍👦 Público-alvo
+
+Este guia é destinado a:
+
+- Administradores de sistemas
+- Técnicos de infraestrutura
+- Operadores que mantêm servidores FreeBSD
+- Equipes que provisionam novos servidores de backup
+
+É recomendado que o leitor tenha conhecimentos básicos de:
+
+- Shell
+- Git
+- Rede (SSH, HTTP/HTTPS)
+- Nginx
+- Estrutura de permissões no FreeBSD
+
+---
+### 📋 Requisitos para seguir o manual
+
+Para executar os procedimentos aqui descritos, é necessário que o operador tenha:
+
+- Acesso administrativo (root) ao servidor FreeBSD
+- Acesso à rede interna onde o REST Server ficará disponibilizado
+- Acesso ao repositório *Git* com os scripts oficiais
+- Conhecimento básico de permissões e serviços no FreeBSD
+
+No caso da publicação via Nginx:
+
+- Acesso ao servidor web
+- Permissão para criar arquivos de domínio
+- Permissão para gerar certificados SSL (Certbot)
+
+---
+### 🙋‍♂️ Responsabilidades do operador
+
+O técnico responsável pela implantação deve:
+
+- Garantir que o *dataset* ZFS seja criado no local correto
+- Validar que o caminho usado pelo REST Server possui espaço suficiente
+- Confirmar conectividade entre o servidor WEB (Nginx) e o REST Server
+- Proteger as credenciais do Basic Auth
+- Manter o serviço em funcionamento e verificar logs
+- Acompanhar alterações futuras na infraestrutura (IP, DNS, certificados etc.)
+- Testar acesso local e remoto após a publicação
+
+---
+### 📝 Informações importantes antes da leitura
+
+Ao longo das instruções, são utilizados caminhos de diretórios, endereços IP, portas, nomes de *dataset*s e exemplos de domínios apenas para fins ilustrativos.
+Cada unidade técnica deverá adaptar esses valores conforme o ambiente real da Prefeitura, seguindo as políticas internas de segurança e infraestrutura.
+
+### 🔹 Caminhos e comandos
+
+Usamos exemplos como:
+
+`/mnt/backups/rest-server`
+
+Eles podem ser modificados, desde que você ajuste o _dataset_ ZFS e o parâmetro `--path` do instalador.
+
+### 🔹 Endereço IP
+
+Substitua sempre pelos IPs reais do seu ambiente.
+
+### 🔹 Basic Auth
+
+As credenciais reais **não** ficam no servidor —  
+o **Backrest** envia automaticamente ao REST Server via variáveis de ambiente.
+
+### 🔹 Publicação com Nginx
+
+Você pode publicar:
+
+- via subpasta
+- via subdomínio
+
+---
+## **💬 Sobre o Servidor REST Server, o Restic e o fluxo de backup**
+
+Antes de iniciar a instalação, é fundamental compreender os **três pilares** que formam todo o sistema de backup utilizado na Prefeitura:
+
+1. **REST Server** — o servidor que vamos instalar neste manual
+2. **Restic** — o motor de backup em linha de comando
+3. **Backrest** — o cliente corporativo que gerencia o Restic nas máquinas
+
+Entender esses três elementos é essencial para interpretar não apenas este manual, mas **todos os demais documentos e procedimentos de backup** utilizados internamente.
+
+---
+### ✅ 1. REST Server — o servidor que armazena os backups
+
+O **REST Server** é um serviço HTTP simples e rápido, projetado exclusivamente para **armazenar os dados criptografados enviados pelo Restic**.
+Ele não faz backup, não deduplica, não lê arquivos — apenas recebe e entrega dados conforme o protocolo **REST** definido pelo próprio Restic.
+
+Em resumo:
+
+- É **o destino** dos backups.
+- Cada cliente guarda os dados criptografados em uma pasta chamada **repositório**.
+- Trabalha normalmente sobre armazenamento ZFS, que será explicado no capítulo **“Instalação passo a passo”**.
+- Será instalado e configurado **neste manual**.
+
+---
+### ✅ 2. Restic — o motor de backup (CLI)
+
+O **Restic** é quem realmente executa o backup.  
+Ele funciona **exclusivamente em linha de comando**, sendo poderoso, seguro e extremamente eficiente.
+
+Ele é responsável por:
+
+- criar e gerenciar o **repositório**,
+- criptografar os dados **antes do envio**,
+- fazer deduplicação,
+- enviar os dados ao **REST Server**,
+- restaurar arquivos,
+- verificar integridade (**check**),
+- executar limpeza (**prune**) e
+- desbloquear repositórios (**unlock**).
+
+Documentação oficial:  
+🔗 [https://restic.net/](https://restic.net/)
+
+Embora muito robusto, o Restic pode ser difícil para usuários comuns — e é aqui que entra o terceiro elemento.
+
+---
+### ✅ 3. Backrest — o cliente corporativo que facilita tudo
+
+O **Backrest** é o sistema adotado oficialmente pela Prefeitura para **gerenciar o Restic nas máquinas clientes**.  
+Ele oferece uma interface gráfica (Web GUI) e automações que tornam o uso do Restic simples e padronizado.
+
+O Backrest:
+
+- controla todas as variáveis de ambiente (incluindo Basic Auth),
+- cria e mantém repositórios,
+- gerencia múltiplas políticas de backup,
+- registra logs, IDs de máquinas e relatórios,
+- impede configurações incorretas,
+- atualiza automaticamente o Restic.
+
+Ele **não substitui** o Restic:  
+➡️ O Backrest **usa** o Restic de forma automatizada e corporativa.
+
+O Backrest **não deve ser instalado no servidor REST Server** — ele é exclusivo para clientes (estações e servidores que enviam backup).
+
+Documentação:  
+🔗 Prefeitura (instalação oficial): [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)  
+🔗 Documentação oficial do Backrest:[https://garethgeorge.github.io/backrest/introduction/getting-started](https://garethgeorge.github.io/backrest/introduction/getting-started)
+
+---
+## **👨‍💻 Instalação passo a passo**
+
+Antes de iniciar a instalação, é fundamental entender **como a Prefeitura Municipal de Batatais padroniza seus servidores** e como o armazenamento de backups deve ser configurado.
+
+O ambiente oficial utiliza:
+
+- **FreeBSD** como sistema operacional
+- **ZFS** como sistema de arquivos padrão
+- Estrutura de diretórios organizada e padronizada
+- *Datasets* dedicados por serviço
+
+Essas escolhas fazem parte do **layout técnico institucional**, já explicado no capítulo _“Considerações Iniciais”_, e **não devem ser alteradas**.  
+Se o técnico optar por usar outro sistema operacional, outro filesystem ou outra estrutura de diretórios, isso ficará **fora do escopo deste manual**, e deverá ser feito **por conta e risco**, sem suporte do layout oficial.
+
+---
+### 🔍 Sobre o uso de _datasets_ ZFS
+
+O corpo técnico da Prefeitura definiu o **ZFS** como sistema de arquivos oficial por ser:
+
+- extremamente robusto
+- altamente confiável
+- ideal para ambientes de backup
+- nativamente integrado ao **FreeBSD**
+
+Um _dataset_ ZFS funciona como um diretório especial gerenciado pelo ZFS, oferecendo:
+
+- ✅ compressão integrada
+- ✅ integridade de dados por checksums
+- ✅ snapshots instantâneos
+- ✅ replicação fácil
+- ✅ gerenciamento independente para cada serviço
+
+📣 Embora o **REST Server** _possa_ funcionar em qualquer diretório convencional, **para seguir o padrão institucional**, recomenda-se fortemente criar um *dataset* para os repositórios de backup.
+
+---
+### ⚠️ Atenção ao caminho do repositório
+
+O script de instalação `install.sh` usa o argumento:
+
+```shell
+--path=/caminho/do/repo
+```
+
+Se você **não informar `--path`**, será utilizado o caminho **padrão definido pela Prefeitura**:
+
+```shell
+/mnt/backups/rest-server
+```
+
+✅ Portanto:
+
+- Se você usar o caminho **padrão**, crie e monte o dataset ZFS exatamente em:  
+    `/mnt/backups/rest-server`
+- Se você optar por outro caminho via `--path`, o *dataset* **deve ser montado exatamente nesse caminho** — caso contrário o **REST Server** não funcionará corretamente.
+  
+🏁 Este alinhamento entre **dataset ZFS** e **caminho do argumento `--path`** é obrigatório para manter compatibilidade com o layout técnico institucional.
+
+---
+### 🔨 Instalação
+
+---
+#### 1️⃣ Instalar o Git
 
 No FreeBSD, use:
 
@@ -50,13 +350,15 @@ No FreeBSD, use:
 sudo pkg install -y git
 ```
 
-### **2️⃣ Clonar o repositório**
+---
+#### 2️⃣ Clonar o repositório
 
 ```sh
 git clone https://github.com/pmbatatais/backup-server.git && cd backup-server
 ```
 
-### **3️⃣ Preparar o script de instalação**
+---
+#### 3️⃣ Preparar o script de instalação
 
 Dê permissão de execução ao script:
 
@@ -64,46 +366,75 @@ Dê permissão de execução ao script:
 sudo chmod +x install.sh
 ```
 
-### **4️⃣ Criar o dataset ZFS para os backups**
+---
+#### 4️⃣ Criar o *dataset* ZFS para os backups
 
-Se ainda não tiver criado o dataset, faça o seguinte:
+Crie o dataset **no mesmo caminho** que será usado como repositório:
 
 ```
 # Criar dataset zfs
-sudo zfs create -o mountpoint=/mnt/backups/rest-server -o compression=lz4 zroot/rest-server
+sudo zfs create \
+  -o mountpoint=/mnt/backups/rest-server \
+  -o compression=lz4 \
+  zroot/rest-server
 
-# Verificar se o dataset está montado corretamente
+# Verificar se o *dataset* está montado corretamente
 sudo zfs list
 ```
+> 💡 _Se pretende usar outro caminho com `--path`, ajuste o mountpoint acima para refletir o novo diretório._
 
-💡 **Dica:** Este dataset será o diretório onde os `Restic-Backups` serão armazenados.
+---
+#### 5️⃣ Executar a instalação
 
-### **5️⃣ Executar a instalação**
-
-Rode o script adaptado para FreeBSD:
+Rode o script `install.sh`:
 
 ```shell
 sudo sh install.sh
 ```
 
-> 📢 Observação: Executar `./install.sh` direto pode não funcionar em alguns ambientes. \
+> 📢 Observação: Executar `./install.sh` direto pode não funcionar em alguns ambientes.
 > 🤓 Use sempre `sh install.sh`.
 
-Você também pode modificar o caminho do repositório e a porta TCP:
-
+Para instalar definindo um **caminho personalizado** e/ou outra **porta**:
 ```shell
 sudo sh install.sh --path=/backups/repo_restic --port=8081
 ```
 
-### 6️⃣ **Dica Bônus: Usuário SFTP Somente Leitura**
-> Para permitir que um técnico ou usuário visualize os repositórios do REST Server **sem alterar ou excluir nada**, siga este passo a passo:
+---
+#### 6️⃣ Uso do serviço
 
-#### 👥 6.1. Criar o grupo `sftpusers` (se ainda não existir)
+- _Iniciar o serviço_:
+```shell
+sudo service rest_server start
+```
+
+- _Parar o serviço_:
+```shell
+sudo service rest_server stop
+```
+
+- _Verificar status_:
+```shell
+sudo service rest_server status
+```
+
+- _Editar serviço_
+```shell
+sudo service rest_server edit
+```
+---
+## **Dica Bônus: Usuário SFTP Somente Leitura**
+
+> Para permitir que um técnico ou usuário visualize os repositórios do *REST Server* **sem alterar ou excluir nada**, siga este passo a passo:
+
+---
+### 👥 1. Criar o grupo `sftpusers` (se ainda não existir)
 ```sh
 sudo pw groupadd sftpusers
 ```
 
-#### 👤 6.2. Criar o usuário e adicioná-lo ao grupo `sftpusers`
+---
+### 👤 2. Criar o usuário e adicioná-lo ao grupo `sftpusers`
 
 ```sh
 sudo pw useradd readonly -m -d /mnt/backups/rest-server -s /usr/sbin/nologin -G sftpusers
@@ -113,9 +444,10 @@ sudo passwd readonly
 > - `/mnt/backups/rest-server`: diretório dos repositórios  
 > - `/usr/sbin/nologin`: impede login SSH interativo
 
-#### 🔒 6.3. Configurar SSH para Chroot (enjaular o usuário)
+---
+### 🔒 3. Configurar SSH para Chroot (enjaular o usuário)
 
-No `/etc/ssh/sshd_config` adicione:
+Adicione ao final do arquivo `/etc/ssh/sshd_config`:
 
 ```conf
 Match Group sftpusers
@@ -125,9 +457,10 @@ Match Group sftpusers
     X11Forwarding no
 ```
 
-> `%h` garante que o usuário fique **preso ao próprio diretório home**, sem acesso a outros diretórios do sistema
+> A variável `%h` garante que o usuário fique **preso ao próprio diretório home**, sem acesso a outros diretórios do sistema
 
-#### 📂 6.4. Ajustar permissões para leitura apenas
+---
+### 📂 4. Ajustar permissões para leitura apenas
 
 ```sh
 sudo chown -R root:sftpusers /mnt/backups/rest-server
@@ -136,253 +469,350 @@ sudo chmod -R 755 /mnt/backups/rest-server
 > O usuário pode navegar e baixar arquivos, **mas não criar, alterar ou excluir**. \
 > Subdiretórios devem seguir a mesma regra de propriedade `root:sftpusers`
 
-#### ⚡ 6.5. Testar o acesso SFTP
+---
+### ⚡ 5. Testar o acesso SFTP
 ```sh
 sftp readonly@ip_do_servidor
 ```
 > O usuário consegue visualizar e baixar arquivos, mas tentativas de escrita **serão negadas**.
 
-### ✅ **Resumo:** Ideal para auditoria, consultas externas ou backups.  
-> O usuário **fica seguro e enjaulado**, sem risco de modificar os repositórios do REST Server.
-
 ---
+## **🌐 Publicando o REST Server em um domínio ou subdomínio usando Nginx**
 
-## **▶️ Uso do serviço**
-
-- **Iniciar o serviço:**
-
-```shell
-sudo service rest_server start
-```
-
-- **Parar o serviço:**
-
-```shell
-sudo service rest_server stop
-```
-
-- **Verificar status:**
-
-```shell
-sudo service rest_server status
-```
-
----
-
-## **🌐 Publicando o Rest Server em um domínio ou subdomínio usando Nginx**
-
-Este capítulo explica como disponibilizar seu **Rest Server** na web usando **Nginx**, com autenticação, SSL via Certbot e suporte tanto para:
+Este capítulo explica como disponibilizar o **REST Server** de forma segura na web usando **Nginx**, com autenticação, HTTPS e suporte a publicação em:
 
 ✅ **Subpasta:** `https://meudominio.com/restserver`  
 ✅ **Subdomínio:** `https://restserver.meudominio.com`
 
-> 🧠 Adotamos `meudominio.com` para fim de aprendizado. Obviamente que você deverá substituir `meudominio.com` por um domínio registrado na internet.
+Para fins de exemplo, utilizaremos o domínio fictício **meudominio.com**.  
+Na Prefeitura de Batatais, o técnico pode solicitar a criação de um subdomínio do domínio oficial **batatais.sp.gov.br** junto aos responsáveis do setor.
 
-### **1️⃣ Estrutura do Nginx no FreeBSD**
-> 💡 O Nginx **não precisa estar instalado no mesmo servidor onde o Rest Server está rodando**. 
+> ✅ Você também pode usar:
+> - um **domínio próprio** (registrado em *HostGator*, *Registro.br*, *Cloudflare*, etc)
+> - ou um **serviço DDNS gratuito**, como **DuckDNS**, **FreeDNS**, **Cloudflare DDNS**, etc.
 
-- Arquivo principal:
+---
+### 🧱 Estrutura do Nginx no FreeBSD
 
+O FreeBSD é o **servidor oficial** adotado pela Prefeitura para:
+
+- REST Server
+- Nextcloud
+- Servidor de arquivos
+- Servidor Web institucional
+
+Se o técnico quiser optar por **Linux**, outro sistema operacional ou até **Apache** no lugar do Nginx, isso **não será abordado neste manual**, mas é perfeitamente possível — apenas **fica fora do escopo técnico e do padrão adotado pela instituição**.
+
+No **FreeBSD**, a estrutura do **Nginx** segue este padrão:
+
+#### 📝 Arquivo principal:
+
+```shell
+/usr/local/etc/nginx/nginx.conf
 ```
-/usr/local/etc/nginx.conf
+
+#### 📝 Arquivos individuais por domínio (padrão oficial)
+
+```shell
+/usr/local/etc/nginx/sites.d/
 ```
 
-- Arquivos individuais por domínio:
+Este é o modelo **oficial** utilizado nos servidores da Prefeitura, seguindo o mesmo padrão de outros serviços:
 
 ```plaintext
-/usr/local/etc/nginx/sites.d/ ou /usr/local/etc/nginx/sites-available/
+/usr/local/etc/nginx/sites.d/nextcloud.domain.conf
+/usr/local/etc/nginx/sites.d/nextcloud.local.conf
+/usr/local/etc/nginx/sites.d/glpi.domain.conf
 ```
 
-### **1️⃣ Conectando-se ao servidor Web**
-> Todos os comandos a seguir deverão ser realizados no servidor WEB, onde o NGINX está instalado.
+Para manter total consistência, o arquivo do **REST Server** também deverá seguir esse formato:
+
+```shell
+/usr/local/etc/nginx/sites.d/restserver.domain.conf
+```
+
+---
+#### 📢 Importante sobre este manual
+
+➡️ **Este manual cobre apenas o uso de _arquivos individuais_ no diretório `sites.d`.**
+
+➡️ **Não ensinaremos como configurar tudo diretamente no arquivo `nginx.conf`.**  
+Embora isso seja possível, não faz parte do padrão adotado pela Prefeitura, e manteremos o layout institucional como referência.
+
+Se o técnico desejar usar somente o `nginx.conf`, ele é livre para fazê-lo — mas **eventuais adaptações devem ser feitas por conta própria**.
+
+---
+### ⏳ Preparando o Nginx
+
+Antes de criar o Virtual Host ou subdomínio do **REST Server**, é essencial **preparar** o Nginx para que ele **aceite arquivos individuais de configuração e rejeite acessos indevidos**.
+
+Todas essas configurações devem ser feitas no arquivo principal:
+
+```shell
+/usr/local/etc/nginx/nginx.conf
+```
+
+---
+#### Habilitar suporte a arquivos individuais (`sites.d/*.conf`)
+
+Este include é **obrigatório** para que o Nginx reconheça arquivos como:
+
+- `/usr/local/etc/nginx/sites.d/restserver.domain.conf`
+- `/usr/local/etc/nginx/sites.d/nextcloud.domain.conf`
+
+Dentro do bloco `http {}`, adicione:
+
+```nginx
+include /usr/local/etc/nginx/sites.d/*.conf;
+```
+---
+#### Adicionar servidores default para bloquear acessos diretos ao IP
+
+Esses blocos evitam acessos indevidos como:
+
+- chamadas por IP público
+- bots
+- scanners automáticos
+- requisições que não correspondam a um domínio configurado
+
+No bloco `http {}` do `nginx.conf`, adicione servidores _default_ para bloquear acessos sem domínio explícito:
+
+```nginx
+# Bloqueia qualquer requisição feita diretamente pelo IP
+server {
+    listen 80 default_server;
+    server_name _;
+    return 444;
+}
+
+server {
+    listen 443 ssl default_server;
+    include snippets/ssl-domain.conf; # caminhos do certbot (ajuste o nome)
+    server_name _;
+    return 444;
+}
+```
+📌 _Obs.: O arquivo `snippets/ssl-domain.conf` é responsável por armazenar os caminhos dos certificados criados pelo Certbot. O nome é apenas ilustrativo._
+
+---
+#### Modelo `nginx.conf` pronto para copiar e colar
+
+Se for o caso, limpe o conteúdo do arquivo `nginx.conf` e cole o seguinte conteúdo:
+
+```nginx
+
+user www www;
+worker_processes auto;
+
+error_log /var/log/nginx/error.log;
+
+events {
+    use kqueue;
+    worker_connections 2048;
+}
+
+http {
+
+	include mime.types;
+	set_real_ip_from 127.0.0.1;
+	real_ip_header X-Forwarded-For;
+    open_file_cache max=200000 inactive=20s;
+    open_file_cache_valid 30s;     
+    open_file_cache_min_uses 2;       
+    open_file_cache_errors on;
+    client_body_temp_path /var/tmp/nginx/client_body_temp 1 2;
+    access_log off;
+    sendfile on;
+    sendfile_max_chunk 1m;
+    tcp_nopush on;
+	tcp_nodelay on;
+    default_type  application/octet-stream;
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    keepalive_timeout 65;
+    server_tokens off;
+	include sites.d/*.conf;
+	
+	server {
+	
+		listen 80 default_server;
+		server_name _;
+		return 444;
+	}
+	
+	server {
+	
+		listen 443 ssl default_server;
+		include snippets/ssl-batatais.conf;
+		server_name _;
+		return 444;
+	}
+}
+
+```
+
+---
+### 🔌 Separação entre Servidor WEB e Servidor REST
+
+O Nginx **não precisa estar no mesmo servidor** onde o REST Server está rodando.  
+Ambos podem estar separados — e isso é até desejável em algumas estruturas.
+
+Contudo:
+
+✅ **Recomendado**: manter os dois servidores **na mesma rede local** ou em uma **VPN**.
+
+⚠️ Se eles estiverem em redes diferentes, será necessário **abrir portas no roteador**, o que é inseguro.
+A documentação oficial do **REST Server** oferece alternativas de proteção para cenários com portas expostas, mas essa prática não é recomendada para a Prefeitura.
+
+---
+### 1️⃣ Conectando-se ao servidor Web
+
+Todos os comandos deste capítulo são executados **no servidor onde o Nginx está instalado**.
 
 ```shell
 ssh usuario@ip_servidor_web -p porta_ssh
 ```
 
-Exemplo:
+👉 Exemplo:
 
 ```shell
 ssh admin@192.168.1.3 -p 22
 ```
 
-### **2️⃣ Criando o arquivo de autenticação Basic Auth**
+---
+### 2️⃣ Criando o arquivo de autenticação **Basic Auth**
 
-Para proteger o servidor REST contra clientes não autorizados, você pode configurar a **autenticação básica HTTP** (ou simplesmente **Basic Auth**).
-Assim, apenas clientes com as credenciais poderão salvar dados.
+Para proteger o **REST Server** contra clientes não autorizados, utilizamos autenticação básica HTTP (Basic Auth).
+Apenas clientes que fornecerem usuário e senha corretos poderão enviar dados ao servidor.
 
-> Basic HTTP Auth deve ser usado apenas em conexeções HTTPS pois a requisição é criptografada de ponta a ponta. 
+> **Importante**: A autenticação **Basic Auth** só é segura quando usada em conjunto com **HTTPS**, pois a criptografia protege as credenciais durante o envio.
 
-Crie o arquivo **RESTSERVER** para autenticação:
+#### 📝 Criando o arquivo de credenciais:
+
+Execute o comando abaixo.
+
+>Ele irá **solicitar o usuário e a senha** diretamente no terminal
 
 ```shell
+printf "Usuário: "; read USERNAME && \
+printf "Senha: "; stty -echo; read PASSWORD; stty echo; echo && \
 mkdir -p /usr/local/etc/nginx/passwords && \
-openssl passwd -apr1 "restserver" | \
-sed 's/^/restserver:/' > /usr/local/etc/nginx/passwords/RESTSERVER
+echo "${USERNAME}:$(openssl passwd -apr1 "$PASSWORD")" > /usr/local/etc/nginx/passwords/RESTSERVER
 ```
-> ⚡ Altere o argumento -apr1 `"restserver"` para uma senha forte!
 
-- Usuário: restserver
-- Senha: restserver
-> Certifique-se de definir credenciais fortes!
-
-Arquivo final criado automaticamente:
-
+O arquivo final será criado automaticamente em:
 ```shell
 /usr/local/etc/nginx/passwords/RESTSERVER
 ```
 
-**✅ Como usar o usuário e senha ao conectar-se ao Rest Server (cliente Restic ou Backrestic)**
+Se você quiser mudar o usuário ou a senha, basta executar o mesmo comando novamente; o arquivo `RESTSERVER` será automaticamente substituído por um novo contendo as credenciais atualizadas, sem necessidade de editar nada manualmente.
 
-Quando você cria o arquivo:
+---
+### 3️⃣ Publicando o REST Server em um VIRTUAL HOST
+_(ex.: `https://meudominio.com/restserver`)_
 
-```
-/usr/local/etc/nginx/passwords/RESTSERVER
-```
+Aqui você irá:
 
-Ele contém:
+✅ Criar **o domínio** no Nginx  
+✅ Incluir o **bloco *location*** do virtual-host  
+✅ Preparar o domínio para o Certbot
 
-- **Usuário:** `restserver`
-- **Senha:** `restserver`
+---
+#### 📌 3.1 Criando o domínio
 
-Para que o cliente **Restic** consiga autenticar no **Rest Server** protegido por Basic Auth, é necessário definir **duas variáveis de ambiente**, [conforme a documentação oficial do Restic](https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html#rest-server):
-
-```
-export RESTIC_REST_USERNAME=<MY_REST_SERVER_USERNAME>
-export RESTIC_REST_PASSWORD=<MY_REST_SERVER_PASSWORD>
-```
-
-No seu caso, substituindo:
-
-```plaintext
-<MY_REST_SERVER_USERNAME> →  restserver  
-<MY_REST_SERVER_PASSWORD> →  restserver
-```
-
-Exemplo:
-
-```
-export RESTIC_REST_USERNAME=MeuUsuarioRestServer
-export RESTIC_REST_PASSWORD=MinhaSenhaForte123
-```
-
-**📖 Como fazer isso no cliente Backrest (Software de Backup Oficial da administração pública)**
-> 📖 Leia o manual ["Instalando e configurando o cliente Backrest"](https://github.com/pmbatatais/backup-client)
-
-No **Backrest**, ao adicionar ou editar um repositório Rest Server, você irá:
-
-- Clicar em **+ Add Repo** ou editar o repositório atual;
-- Na tela de configuração, clique em **+ Set Environment Var**
-- Adicione a primeira variável:
+Crie o arquivo em `/usr/local/etc/nginx/sites.d/restserver.domain.conf`
 
 ```shell
-RESTIC_REST_USERNAME=restserver
+touch /usr/local/etc/nginx/sites.d/restserver.domain.conf
 ```
 
-- Clique novamente em **+ Set Environment Var**
-- Adicione a segunda variável:
-
-```shell
-RESTIC_REST_PASSWORD=SENHA_DO_USUARIO
-```
-
-### **3️⃣ Publicando o Rest Server em um VIRTUAL HOST**
-
-(ex.: `https://meudominio.com/restserver`)
-
-> ⚠️ Atenção: Este manual não cobre a criação de domínios/virtual hosts no Nginx.\
-> 🤔 Se o arquivo do seu domínio ainda não existir, o técnico deverá criá-lo seguindo a documentação oficial do Nginx ou manuais disponíveis na internet.
-
-Adicione o seguinte bloco `location` dentro do bloco `server { … }` HTTPS (onde **listen** é igual a 443):
-> No Servidor **Nextcloud**, adicione a `location` em `/usr/local/etc/nginx/sites.d/nextcloud.domain.conf`
+> 🚨 Certifique-se de que o bloco *http{ ... }*  do arquivo `nginx.conf` possui:
 
 ```nginx
-# Rest Server em um virtual host
-location ^~ /restserver/ {
-
-	auth_basic "Restricted Backup Area";
-	auth_basic_user_file /usr/local/etc/nginx/passwords/RESTSERVER;
-	client_max_body_size 0;
-	client_body_buffer_size 128k;
-	gzip off;
-	proxy_pass http://192.168.1.120:8000/;
-	proxy_http_version 1.1;
-	proxy_request_buffering off;
-	proxy_buffering off;
-	proxy_read_timeout 3600s;
-	proxy_send_timeout 3600s;
-	proxy_set_header Host $host;
-	proxy_set_header X-Real-IP $remote_addr;
-	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-	proxy_set_header X-Forwarded-Proto $scheme;
-	proxy_set_header X-Forwarded-User $remote_user;
-	keepalive_requests 1000;
-	keepalive_timeout 65;
-
-}
+include /usr/local/etc/nginx/sites.d/*.conf;
 ```
 
-> ⚠️ Atenção: `192.168.1.120:8000` é o IP e porta padrão do servidor **rest server**.\
-> 🧐 Lembre-se de alterar o parâmetro `proxy-pass` para o ip e porta corretos.
-
-Exemplo de um arquivo de domínio completo:
+Adicione ao arquivo `restserver.domain.conf`:
 
 ```nginx
+
 server {
 
-  listen 443 ssl;
-  server_name batatais.sp.gov.br;
-	
-	# Include para cabeçalhos de segurança
-	include snippets/ssl-batatais.conf;
-	include snippets/ssl-params.conf;
-	
-	# Enable HTTP/2 for better performance
-	http2 on;
+    listen 80;
+    server_name meudominio.com;
 
-  # Rest Server em um virtual host
-  location ^~ /restserver/ {
-  
-    auth_basic "Restricted Backup Area";
-    auth_basic_user_file /usr/local/etc/nginx/passwords/RESTSERVER;
-  
-    client_max_body_size 0;
-    client_body_buffer_size 128k;
-  
-    gzip off;
-  
-    proxy_pass http://192.168.1.120:8000/;
-    proxy_http_version 1.1;
-    proxy_request_buffering off;
-    proxy_buffering off;
-    proxy_read_timeout 3600s;
-    proxy_send_timeout 3600s;
-  
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header X-Forwarded-User $remote_user;
-  
-    keepalive_requests 1000;
-    keepalive_timeout 65;
-  }
+	# REST Server em um virtual host
+	location ^~ /restserver/ {
+	
+		auth_basic "Restricted Backup Area";
+		auth_basic_user_file /usr/local/etc/nginx/passwords/RESTSERVER;
+		client_max_body_size 0;
+		client_body_buffer_size 128k;
+		gzip off;
+		proxy_pass http://10.0.0.120:8000/;
+		proxy_http_version 1.1;
+		proxy_request_buffering off;
+		proxy_buffering off;
+		proxy_read_timeout 3600s;
+		proxy_send_timeout 3600s;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_set_header X-Forwarded-User $remote_user;
+		keepalive_requests 1000;
+		keepalive_timeout 65;
 
+	}
 }
+
 ```
 
-### **4️⃣ Publicando o Rest Server em um SUBDOMÍNIO**
-Se você preferir, publique o Servidor Rest Server em um subdomínio
+---
+#### ⚠️ Atenção — Substitua TODOS os valores ilustrativos
 
-(ex.: `https://restserver.meudominio.com`)
+##### ✅ 1. `server_name meudominio.com`
 
-- **✍🏼 Crie o arquivo de configurações**:
+Coloque aqui o **domínio real** que você configurou no DNS.  
+Exemplos reais:
+
+- `suaempresa.com`
+- `pmbatatais.sp.gov.br`
+- `gabinete.cloudflareddns.org`
+
+---
+##### ✅ 2. `proxy_pass http://10.0.0.120:8000/`
+
+Esse valor é **somente simbólico**.
+
+Você **deve substituir** por:
+
+- o **IP real** do servidor REST Server
+- a **porta real** configurada no seu REST Server
+
+Exemplos:
+
+```nginx
+proxy_pass http://192.168.1.20:8000/;
+proxy_pass http://10.10.0.5:9090/;
+proxy_pass http://172.16.33.12:8000/;
+```
+
+---
+### 4️⃣ Publicando o **REST Server** em um Subdomínio
+
+Exemplo: (ex.: `https://restserver.meudominio.com`)
+
+Aqui o processo é idêntico ao anterior, mas com `server_name` dedicado.
+
+📝 Crie o arquivo de configurações `restserver.domain.conf`:
 
 ```shell
 touch /usr/local/etc/sites.d/restserver.domain.conf
 ```
 
-#### **✅ Configuração recomendada:**
+✏️ Adicione o conteúdo ao arquivo `restserver.domain.conf`:
 
 ```nginx
 server {
@@ -421,24 +851,138 @@ server {
 }
 ```
 
-- **🔐 Crie os certificados SSL (domínio + subdomínio)**:
+---
+### 5️⃣ Habilitando SSL/TLS (HTTPS) com Let’s Encrypt e Certbot
 
-🤔 Se você tiver múltiplos subdomínios → **deve listar todos** no Certbot.
+Para disponibilizar o Rest Server com segurança, é essencial habilitar **HTTPS**, que criptografa toda a comunicação entre os clientes Backrest/Restic e o servidor.  
+A forma mais simples e gratuita de obter um certificado válido é utilizando:
 
-Exemplo (para multiplos subdomínios):
+- **Let’s Encrypt** — autoridade certificadora gratuita e automatizada
+- **Certbot** — a ferramenta que solicita, renova e configura automaticamente o certificado no Nginx
+
+---
+#### ✅ O que é Let’s Encrypt?
+
+O **Let’s Encrypt** é uma autoridade certificadora gratuita e amplamente reconhecida.  
+Ele gera **certificados SSL/TLS válidos e automáticos**, usados por milhões de sites para habilitar HTTPS.
+
+---
+#### ✅ O que o Certbot faz?
+
+O **Certbot** é uma ferramenta que:
+
+- solicita certificados ao Let’s Encrypt
+- valida que você realmente controla o domínio
+- instala e configura o certificado no Nginx
+- renova automaticamente antes de expirar
+
+Para habilitar HTTPS no FreeBSD, a forma recomendada é instalar o **Certbot** diretamente pelo gerenciador de pacotes do sistema:
 
 ```shell
-certbot --nginx -d meudominio.com -d glpi.meudominio.com -d nextcloud.meudominio.com -d restserver.meudominio.com
+pkg install -y py311-certbot py311-certbot-nginx
 ```
 
+---
+#### ✅ Principais parâmetros do Certbot
 
-Exemplo (domínio + subdomínio do Rest Server):
+|Parâmetro|Explicação|
+|---|---|
+|`--nginx`|Pede ao Certbot para configurar automaticamente os blocos do Nginx|
+|`-d dominio.com`|Diz qual domínio/subdomínio deve ter certificado|
+|`--dry-run`|Testa a renovação sem alterar nada|
+|`certonly`|Obtém o certificado _sem_ alterar o Nginx (não usaremos aqui)|
+>📢 **Importante:** o certificado só é válido para os domínios especificados no parâmetro `-d`. 
+>Se um domínio/subdomínio não for declarado, não terá HTTPS.
+
+---
+#### 📌 Criando o certificado para o domínio
+
+Esse é o caso onde _não existe um subdomínio dedicado_.
+O Rest Server fica “embaixo” do domínio principal, por exemplo:
+
+```http
+https://meudominio.com/restserver
+```
+
+##### ✅ Quando gerar o certificado?
+
+- **Se o domínio já usa HTTPS**, você **não precisa** gerar novamente.
+- **Se o domínio é novo ou nunca teve certificado**, gere assim:
 
 ```shell
-certbot --nginx -d meudominio.com -d restserver.meudominio.com
+certbot --nginx -d meudominio.com
 ```
 
-### **5️⃣ Testar e recarregar o Nginx**
+Pronto. Todo o domínio agora suporta HTTPS, incluindo `/restserver`.
+
+---
+#### 📌 Criando o certificado para o subdomínio
+
+Quando você cria um subdomínio como:
+
+```http
+restserver.meudominio.com
+```
+
+Você **precisa gerar o certificado contendo todos os subdomínios existentes no Nginx**, e não somente o subdomínio do **REST Server**.
+
+---
+##### 🤷‍♂️ Por que listar todos os subdomínios?
+
+Porque o Certbot não “completa” automaticamente.  
+Ele **substitui** a lista de domínios existente pelo que você declarar no comando.
+
+➡️ Se você omitir `monitoramento.meudominio.com`, por exemplo, esse domínio perderá HTTPS.  
+➡️ Por isso você deve listar **todos** os domínios/subdomínios que já existem + o novo subdomínio.
+
+---
+##### ✅ Como listar todos os subdomínios configurados no Nginx
+
+Use:
+
+```shell
+grep -R "server_name" /usr/local/etc/nginx \
+    | grep -v "dist" \
+    | grep -v "alias" \
+    | awk '{for(i=1;i<=NF;i++) if ($i != "server_name") print $i}' \
+    | sed 's/;//' \
+    | grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' \
+    | grep -vE '(^localhost$|^_$)' \
+    | sort -u
+```
+
+Exemplo de saída:
+
+```shell
+meudominio.com
+www.meudominio.com
+glpi.meudominio.com
+nextcloud.meudominio.com
+pmbatatais.meudominio.com
+```
+
+---
+##### ✅ Emitindo o certificado com todos os domínios
+
+Com a lista em mãos, gere assim:
+
+```shell
+certbot --nginx \
+  -d seudominio.com \
+  -d www.seudominio.com \
+  -d monitoramento.seudominio.com \
+  -d api.seudominio.com \
+  -d restserver.seudominio.com
+```
+
+Esse comando:
+
+✅ Atualiza o certificado existente  
+✅ Não derruba domínios já configurados  
+✅ Adiciona o novo subdomínio ao mesmo certificado SAN
+
+---
+### **6️⃣ Testar e recarregar o Nginx**
 
 ```shell
 nginx -t
@@ -446,16 +990,155 @@ service nginx restart
 ```
 
 ---
+## 🧩 **Integração do REST Server com o Backrest**
 
-## **🔗 Referências**
+_(Guia oficial para técnicos da Prefeitura de Batatais)_
 
-- Projeto **Rest Server**: <https://github.com/restic/rest-server>
-- Ferramenta de Backup **Restic**: <https://restic.net>
-- Tudo sobre **ZFS**: <https://docs.freebsd.org/pt-br/books/handbook/zfs/>
-- Repositório adaptado para FreeBSD: <https://github.com/pmbatatais/backup-server.git>
+Este capítulo explica **como integrar**, de forma segura e padronizada, o **cliente Backrest** ao **REST Server** instalado no servidor de backup.
+
+Antes de continuar, certifique-se de que:
+
+✅ Você **já instalou corretamente o Backrest** nas máquinas que farão backup (não confundir com o servidor REST Server — **são componentes completamente diferentes**). 
+
+✅ Você **leu e entendeu o manual oficial de instalação do Backrest**, disponível em:  
+👉 [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+
+> ⚠️ **O Backrest não deve ser instalado no servidor REST Server.**  
+> Cada máquina cliente tem o seu Backrest local, enquanto o servidor **REST Server** fica centralizado no servidor de backup.
 
 ---
+### 1. Acessando o painel do Backrest
 
+Por padrão, o **Backrest** roda no endereço:
+
+```http
+http://localhost:9898
+```
+
+Caso o técnico tenha modificado a porta TCP durante a instalação, deverá usar a nova porta configurada.
+
+---
+### 2. Inserindo um novo repositório REST Server no Backrest
+
+Dentro do Backrest:
+
+1. Abra o menu **Repositories**.
+2. Clique em **+ Add Repo**.
+3. No campo **Repository URI**, insira a URL do repositório no REST Server.
+
+A sintaxe correta é **sempre**:
+
+```backrest
+rest:http://IP_DO_SERVIDOR:PORTA/NOME_DO_REPOSITORIO
+```
+
+Exemplo ilustrativo (não copie este endereço — o seu endereço real depende da sua infraestrutura):
+
+`rest:http://192.168.1.120:8000/financeiro`
+
+> ✅ O _Backrest_ é quem cria automaticamente o diretório do repositório no REST Server.  
+> Se você digitar `.../novo_repositorio`, o Backrest criará automaticamente a pasta:
+> `/backups/restic-server/novo_repositorio`
+
+#### ⚠️ Sobre edição de repositórios no Backrest
+
+O Backrest **não permite edição** de:
+
+- endereço do repositório (Repository URI)
+- nome do repositório
+- senha do repositório
+
+Se precisar modificar **qualquer um desses campos**, será preciso:
+
+1. Excluir o repositório da lista do Backrest.
+2. Inserir novamente com os novos dados.
+3. Em seguida, clicar no botão **Index Snapshots** para reconstruir a listagem dos backups já existentes nesse repositório.
+
+> ⚠️ A senha de um repositório Restic **não pode ser alterada**.  
+> Se você perder essa senha, **não poderá recuperar nenhum snapshot**.  
+> Isso já está explicado detalhadamente no [manual do Backrest](https://github.com/pmbatatais/backup-client) — leia com atenção.
+
+---
+### 3. Registrando as credenciais de *Basic Auth* no Backrest
+
+O REST Server pode exigir _usuário e senha_ por meio de **Basic Auth**, garantindo que somente clientes autorizados acessem os repositórios. O **Restic** utiliza **variáveis de ambiente** para enviar essas credenciais em cada operação, mas no ambiente da Prefeitura esse processo é totalmente automatizado pelo **cliente Backrest**, que é responsável por armazenar e repassar essas variáveis ao Restic.
+
+As credenciais utilizadas devem ser **exatamente as mesmas criadas durante a configuração do Basic Auth**, descrita no capítulo **“Publicando o REST Server em um domínio ou subdomínio usando Nginx”, tópico _2. Criando o arquivo de autenticação Basic Auth_**.
+
+Essas credenciais são sempre criadas no **servidor web** (Nginx/Apache/Caddy). Esse servidor pode ou não estar na mesma máquina do REST Server — porém, **não é recomendado** unificar ambos.
+
+Depois de criar o usuário e senha no servidor web, registre-os no cliente Backrest:
+
+1. Abra o Backrest e acesse o menu **Repositories**.
+2. Clique em **+ Add Repo** (ou edite um repositório existente apenas para ajustar suas variáveis).
+3. Clique em **+ Set Environment Var** e adicione:
+```nginx
+RESTIC_REST_USERNAME=seu_usuario
+```
+4. Clique novamente em **+ Set Environment Var** e adicione:
+```nginx
+RESTIC_REST_PASSWORD=sua_senha
+```
+
+Esses valores devem corresponder **exatamente** ao conteúdo do arquivo `RESTSERVER` criado no *Basic Auth*.
+
+> ✅ **Se o técnico alterar as credenciais *Basic Auth* no servidor web, basta atualizar os mesmos valores no Backrest.**  
+> As variáveis podem ser modificadas a qualquer momento sem recriar o repositório.
+
+---
+### 4. Testando a conexão
+
+Após configurar:
+
+1. Verifique se:
+    - o endereço está correto
+    - a porta está correta
+    - o nome do repositório está correto
+    - o servidor REST Server está ativo
+    - as credenciais estão válidas
+    - o Nginx/Apache está encaminhando corretamente para o REST Server (em caso de HTTPS)
+
+2. Clique em **Test Configuration** no Backrest. 
+3. Se tudo estiver correto, clique em **Submit** e salve as configurações. 
+
+✅ O Backrest criará a pasta do repositório no REST Server (se ela ainda não existir)  
+✅ Conectará ao repositório
+✅ Permitirá backups, restores e indexação normalmente.
+
+---
+### 5. Dificuldades? Consulte os manuais
+
+Evite tentar adivinhar comportamentos — isso causa perda de tempo e falhas de configuração.
+
+👉 A prefeitura disponibiliza o manual completo do Backrest em:
+[https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+
+📌 Se quiser, leia também o **manual oficial**, disponível em: 
+[https://garethgeorge.github.io/backrest/introduction/getting-started/](https://garethgeorge.github.io/backrest/introduction/getting-started/)
+
+Ele contém:
+
+- requisitos
+- instalação
+- boas práticas
+- explicações sobre senhas
+- erros comuns
+- permissões
+- fluxo de backup
+- orientações para recuperação de desastres
+
+Use sempre como referência oficial.
+
+---
+## **🔗 Referências**
+
+- Projeto **REST Server**: <https://github.com/restic/rest-server>
+- Ferramenta de Backup **Restic**: <https://restic.net>
+- Documentação oficial **Backrest**: https://garethgeorge.github.io/backrest/introduction/getting-started/
+- Manuais de instalação e configuração: [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+- Tudo sobre **ZFS**: <https://docs.freebsd.org/pt-br/books/handbook/zfs/>
+
+---
 ## **📜 Autor**
 
 **Leonardo Ribeiro**  
