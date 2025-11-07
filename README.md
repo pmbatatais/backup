@@ -15,11 +15,11 @@ Nosso objetivo é garantir:
 
 ### ✅ 1. Servidor de Backup – REST Server
 
-👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup/backup-server](https://github.com/pmbatatais/backup/backup-server)
+👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup/backup-server](/backup-server)
 
 ### ✅ 2. Cliente de Backup – Backrest + Restic
 
-👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup/backup-client](https://github.com/pmbatatais/backup/backup-client)
+👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup/backup-client](/backup-client)
 
 ### ✅ 3. Como fazer backup
 
