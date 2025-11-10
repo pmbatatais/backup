@@ -1,0 +1,333 @@
+[33mcommit 6f2620103e6c7fcbff5c2a401cfd4a343adf8ca2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Fri Nov 7 17:09:50 2025 -0300
+
+    Revise remote access examples and header formatting
+    
+    Updated remote access examples and section headers in README.
+
+[33mcommit 36472e87781efe8a40135335c510c93c4e638d77[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Fri Nov 7 17:04:44 2025 -0300
+
+    Update links in README for backup server and client
+
+[33mcommit ec6d6baaac374c85d9043f730c88a50040df75ed[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Fri Nov 7 15:09:46 2025 -0300
+
+    Fix tutorial links in README.md
+    
+    Updated links for official tutorials in the README.
+
+[33mcommit 928382ea594f5d7a7a722aca718543b80a0d0438[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Fri Nov 7 15:07:35 2025 -0300
+
+    Update README with installation instructions for Backrest
+    
+    Added installation guide for Backrest client.
+
+[33mcommit dc1321c2118847cd64e0e1c326a9d8acbcc93d05[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Fri Nov 7 15:06:51 2025 -0300
+
+    Update print statement from 'Hello' to 'Goodbye'
+
+[33mcommit cfd8702da54b1cb942c281eb8bee2bab31354149[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 20:40:17 2025 -0300
+
+    Move backup-server e backup-client para a raiz do repositório
+
+[33mcommit 12d502fe4a1a4b208a0740b4400f86185d28c6c4[m
+Merge: af2d434 d057c0f
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 20:26:12 2025 -0300
+
+    Add 'repos/backup-client/' from commit 'd057c0f21165f0b83a8342b3180a3061bd73879a'
+    
+    git-subtree-dir: repos/backup-client
+    git-subtree-mainline: af2d434a6197f278e8db4cb85ecca90a9853f926
+    git-subtree-split: d057c0f21165f0b83a8342b3180a3061bd73879a
+
+[33mcommit af2d434a6197f278e8db4cb85ecca90a9853f926[m
+Merge: 8f1f6af ace79bb
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 19:28:02 2025 -0300
+
+    Add 'repos/backup-server/' from commit 'ace79bb9bf19ea016401aa44552305371f6bcd97'
+    
+    git-subtree-dir: repos/backup-server
+    git-subtree-mainline: 8f1f6af2116eba529f214b0105d4192a7c6cc804
+    git-subtree-split: ace79bb9bf19ea016401aa44552305371f6bcd97
+
+[33mcommit d057c0f21165f0b83a8342b3180a3061bd73879a[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 16:28:16 2025 -0300
+
+    Revise Backrest installation guide for version 1.10.1
+    
+    Updated installation guide for Backrest, changing version from 1.9.2 to 1.10.1 and adjusting references to the REST Server. Enhanced clarity and added security notes regarding sensitive information.
+
+[33mcommit 8f1f6af2116eba529f214b0105d4192a7c6cc804[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 16:27:07 2025 -0300
+
+    Refactor section headers in README.md
+    
+    Updated section headers to improve document structure and clarity.
+
+[33mcommit b1e78b5256e7507636eeee6f9f8f522ca2e00863[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 11:24:35 2025 -0300
+
+    Revise README for clarity and consistency
+    
+    Updated the README to improve clarity and consistency in language, ensuring all sections reflect the standardized backup environment used by the Prefeitura Municipal de Batatais.
+
+[33mcommit d18f8a9ceb63e5bb1263d7403a1d3b426b41bec3[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 11:07:45 2025 -0300
+
+    Revise README for improved clarity and organization
+    
+    Updated README to enhance clarity and structure, including new sections and improved formatting.
+
+[33mcommit b6a6f9108cbba206e270f9cece3e0617c0b89039[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 08:42:26 2025 -0300
+
+    Revise README for Backup Environment Documentation
+    
+    Updated README to include detailed documentation on the backup environment with Rest Server, Restic, and Backrest.
+
+[33mcommit 2beb882cd23ebbb24962f6009b14b76109bc212b[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 08:36:36 2025 -0300
+
+    Initial commit
+
+[33mcommit ace79bb9bf19ea016401aa44552305371f6bcd97[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Nov 4 08:35:27 2025 -0300
+
+    Revise README for Nginx setup and subdomain details
+    
+    Updated the README to reflect changes in subdomain usage and improved instructions for setting up Nginx.
+
+[33mcommit 11ba4ff24e08e140888cfa3796f2a5ed94dbabba[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Mon Nov 3 19:40:07 2025 -0300
+
+    Revise Basic Auth instructions in README
+    
+    Updated authentication details and instructions for Basic Auth in the README.
+
+[33mcommit 8eea2da0383265dcb52c6f2ec0cdf3b5c69d2107[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Mon Nov 3 16:31:01 2025 -0300
+
+    Revise Nginx setup and SSH connection details
+    
+    Updated instructions for Nginx configuration and SSH connection.
+
+[33mcommit 1338c7f4eafd94a2f63321686a8134cd277aef4d[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Mon Nov 3 16:14:37 2025 -0300
+
+    Adiciona instruções para publicar Rest Server com Nginx
+    
+    Este capítulo detalha a publicação do Rest Server utilizando Nginx, abordando autenticação, SSL com Certbot, e opções de configuração para subpastas e subdomínios.
+
+[33mcommit 4961bcd17c5289892e52a8de0fd4848b7bb2cd93[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Oct 15 18:55:17 2025 -0300
+
+    README.md
+
+[33mcommit 1967e89a7cce86bff4fade4ed5cce8ea4903d963[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Oct 15 16:22:27 2025 -0300
+
+    README.md
+
+[33mcommit 5aac4186cfac49e7229699174385ee356fe1bc77[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Oct 15 16:19:07 2025 -0300
+
+    install.sh
+
+[33mcommit 4aca7341682653abc672dfa1c209cdd16687dc5d[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Oct 15 16:08:49 2025 -0300
+
+    install.sh
+
+[33mcommit 5c3e192150bcd5374acb2dfa3e4180264f95574f[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Oct 15 16:07:10 2025 -0300
+
+    README.md
+
+[33mcommit b2928f5c44059465ffbe9ed35d6fd0e84b145a10[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Oct 15 16:04:06 2025 -0300
+
+    README.md
+
+[33mcommit b9901c3034d0572fa4ed7958a0fa9226b1b9dd52[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Oct 15 16:01:36 2025 -0300
+
+    Initial commit
+
+[33mcommit 75ff145e9f1e81ff652f9de4bd6eecaf94b4e740[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 15:10:28 2025 -0300
+
+    LICENSE
+
+[33mcommit 2fa9e22ee8e3a05299f6fd8602e54b8761d46a04[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 11:49:53 2025 -0300
+
+    README.md
+
+[33mcommit 13e676714e1d1beb74a9224bed601f24997c85c5[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 11:46:43 2025 -0300
+
+    README.md
+
+[33mcommit b6ad1278f9dbfef8d259b69c2383933fa6090748[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 11:30:16 2025 -0300
+
+    README.md
+
+[33mcommit 9b0976408d060d9377801050d4abebd078413a56[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 09:16:41 2025 -0300
+
+    README.md
+
+[33mcommit b78298f6b785449d0fa8bc67b621a4fdcbb8380f[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 09:02:02 2025 -0300
+
+    README.md
+
+[33mcommit 09206690f8e102847c8b053f786342525b2f9bd5[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 08:53:46 2025 -0300
+
+    install.sh
+
+[33mcommit c3934546f6980c59131ab4016534f12ada04cac9[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 08:47:04 2025 -0300
+
+    install.sh
+
+[33mcommit 0e112d2c1aef2305925aba9072a1bf23990bfc86[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 08:40:13 2025 -0300
+
+    install.sh
+
+[33mcommit 623906b5ba2e3cd0bb95e4afd6d6c0436b7e838f[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 08:04:46 2025 -0300
+
+    install.sh
+
+[33mcommit f1af2433e1616cb862f5b44ad24b65746ef43feb[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 08:00:15 2025 -0300
+
+    install.sh
+
+[33mcommit 304fd08c4bf1b098b201b1d973d80f584bc5daf3[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Wed Sep 24 07:55:43 2025 -0300
+
+    install.sh
+
+[33mcommit 9abe37d20199d6ad128c7064ff4f15f4aa1ce03e[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 18:53:33 2025 -0300
+
+    README.md
+
+[33mcommit 31f034a1598f37b7d9379b6d8967eda7815b6df9[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 18:49:13 2025 -0300
+
+    README.md
+
+[33mcommit 366b56b1e72227d79368bfa4829e80b9c0b44e9a[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 18:35:51 2025 -0300
+
+    README.md
+
+[33mcommit b8f93c507a3f599e3402ec16df69c50884106948[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 18:33:04 2025 -0300
+
+    README.md
+
+[33mcommit 6caebaffbd77c64c693b790db755173d67820df8[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 16:25:41 2025 -0300
+
+    install.sh
+
+[33mcommit 9e0e4ddfc8983023e369a33fa1274296fdebf1a9[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 16:19:39 2025 -0300
+
+    install.sh
+
+[33mcommit 8f6d858da83a7639f82f86f71742da055bd1dd86[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 16:13:15 2025 -0300
+
+    Add files via upload
+
+[33mcommit 5aa22f66fbfa04440638df863f862365d1c2a1d4[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 16:12:48 2025 -0300
+
+    Delete server directory
+
+[33mcommit a41c6a30ddc9dc1eba229d5d6176478e1e1ececf[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 16:02:57 2025 -0300
+
+    install.sh
+
+[33mcommit b3cf24e00d277a4bc8b1711e1570212ce676aa42[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 15:59:09 2025 -0300
+
+    install.sh
+
+[33mcommit 4e877c59a7e41b34bc621f6e6dc4e7b69dbac023[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 15:51:44 2025 -0300
+
+    Delete server/Install.txt
+
+[33mcommit 9cf1441f1c53010d5cb905f6416a2be66871f0e3[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 15:50:54 2025 -0300
+
+    Add files via upload
+
+[33mcommit d1ba4e37859a6c1c42dd165479f0bd9e1d7a712f[m
+Author: Leonardo Ribeiro <rleonardo518@gmail.com>
+Date:   Tue Sep 23 15:42:46 2025 -0300
+
+    Initial commit

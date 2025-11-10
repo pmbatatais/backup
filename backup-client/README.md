@@ -40,29 +40,8 @@ Não estão incluídos:
 - Configuração do servidor REST Server
 - Diretrizes formais de política de backup
 - Troubleshooting avançado  
+
     Esses tópicos possuem documentação própria.
-
-### ✅ Público-alvo
-
-Este manual é destinado a técnicos e administradores de sistemas autorizados da Prefeitura de Batatais que realizam manutenção em servidores e estações corporativas.
-
-### ✅ Requisitos para seguir o tutorial
-
-Para executar os procedimentos, o operador deve possuir:
-
-- Acesso administrativo ao sistema (root/administrator)
-- Acesso de rede ao REST Server institucional
-- Credenciais válidas para autenticação
-- Conhecimento básico de linha de comando
-
-### ✅ Responsabilidades do operador
-
-O operador é responsável por:
-
-- Garantir conectividade com o servidor REST
-- Acompanhar falhas recorrentes de backup
-- Manter as credenciais de forma segura
-- Notificar a equipe responsável sobre incidentes ou inconsistências
 
 ---
 ## **📝 Sobre o Backrest**
@@ -86,7 +65,7 @@ Principais vantagens:
 - 🌐 Interface Web de administração (`http://localhost:9898`)
 - 🔒 Criptografia ponta a ponta
 - 📋 Logs detalhados
-- 🔗 Integração direta com REST Server
+- 🔗 Integração direta com **REST Server**
 
 ---
 ## **📘 Conceitos Fundamentais**
