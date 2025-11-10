@@ -2,6 +2,10 @@
 
 Este documento consolida a **documentação oficial da Prefeitura Municipal de Batatais** referente ao ambiente padronizado de backup utilizado em todos os equipamentos institucionais.
 
+>**ℹ️ Nota importante:**  
+> Alguns termos técnicos poderão ser novos para alguns leitores.  
+> Por isso, ao longo do documento você encontrará referências ao **Glossário Técnico** (no final), onde cada termo é explicado de forma clara e simples.
+
 ---
 ## ✅ Público-alvo
 
@@ -82,15 +86,20 @@ Qualquer variação é feita por conta e risco do operador.
 ---
 ## 🧭 Introdução — Por que padronizamos este ambiente?
 
-Durante anos, diferentes ferramentas de backup foram usadas na Prefeitura, mas muitas já não atendem às necessidades atuais, como:
+Durante anos, a Prefeitura utilizou diferentes ferramentas de backup, sistemas operacionais e estruturas de arquivos; cada setor trabalhava com sua própria combinação — versões diversas de Windows, servidores improvisados, partições pouco organizadas e softwares incompatíveis entre si. 
+Esse cenário, quando não padronizado, pode gerar vários problemas, como:
 
-- Crescimento do volume de arquivos
-- Restaurações rápidas e confiáveis
-- Segurança contra ataques modernos
-- Auditoria simples
-- Integridade e criptografia ponta a ponta
+- **Dificuldade de auditoria**
+- **Aumento do risco de falhas operacionais**
+- **Restaurações mais lentas ou inconsistentes**
+- **Maior exposição a falhas de segurança**
 
-Ferramentas anteriores apresentaram limitações importantes.
+Com o tempo, também se identificou que:
+
+- Algumas ferramentas antigas não lidam bem com grande volume de dados
+- Sistemas de arquivos diferentes entre setores podem gerar inconsistências
+- Protocolos inseguros, como FTP, podem comprometer a confidencialidade
+- Métodos sem criptografia ou verificação de integridade podem afetar a confiabilidade do backup
 
 ---
 ### ❌ Cobian Backup via FTP
@@ -117,23 +126,56 @@ Apesar da interface amigável, não é adequado ao ambiente institucional:
 - Manutenção complexa em escala
 
 ---
+### ❌ Sistemas Operacionais Antigos (Windows 7 e 8)
+
+Problemas comuns:
+
+- Sem suporte oficial
+- Falhas de segurança conhecidas
+- VSS instável ou quebrado
+- Drivers sem atualização
+- Perigo para backup e restauração
+
+---
 ## 🔗 Arquitetura — Como tudo funciona
 
-Após entendermos **por que** a Prefeitura precisa de um ambiente padronizado — segurança, simplicidade e menos erros — este tópico responde à pergunta:
+Após entendermos por que a Prefeitura precisa de um ambiente padronizado — segurança, simplicidade e menos erros — este tópico responde:
 
 ✅ **Como essa padronização realmente funciona, na prática?**
 
-A resposta está em um formato muito simples de entender:  
-uma estrutura **central**, **padronizada** e **igual para todos**, formada por três partes que trabalham juntas:
+O ambiente foi construído com uma arquitetura simples e extremamente confiável:  
+uma estrutura central, padronizada e igual para todos, composta por **quatro partes fundamentais**:
 
-> **REST Server (servidor central) + Restic (motor de backup) + Backrest (cliente de backup)**
+- **😈 FreeBSD + ZFS** — Base do servidor 
+    Sistema operacional extremamente resiliente com filesystem de integridade avançada.
+- **📡 REST Server** — Servidor central 
+    Ponto único de recebimento e armazenamento dos dados criptografados.
+- **⚙️ Restic** — Motor de backup 
+    Responsável por criar, deduplicar e enviar os dados com segurança.
+- **🤖 Backrest** — Cliente de backup 
+    Gerencia horários, políticas, pastas e o fluxo completo de backups.
 
-Esse conjunto garante que _todos os setores_, _todas as máquinas_ e _todos os operadores_ sigam o mesmo modo de fazer o backup — sem invenções, sem métodos diferentes, sem complicações.
+Essa combinação garante que todos os setores sigam um padrão único de operação: o backup ocorre sempre da mesma forma e sobre a mesma base tecnológica. Com o servidor central padronizado em FreeBSD e ZFS, o ambiente torna-se mais estável e seguro, reduzindo variações entre sistemas e assegurando que todo o processo de backup funcione de maneira uniforme e confiável em toda a Prefeitura.
 
 ---
-### 🖥️ 1. REST Server — Servidor central dedicado ao armazenamento
+#### 😈 1. FreeBSD + ZFS — Por que esta é a base do servidor de backup?
 
-#### ✅ O que é?
+O **FreeBSD** é um sistema operacional amplamente utilizado em servidores, reconhecido pela sua estabilidade, simplicidade e comportamento previsível.  
+Diferentemente do Windows, voltado ao uso geral, e do Linux, que possui diversas distribuições com características distintas, o **FreeBSD** mantém um padrão único — kernel e ferramentas evoluem juntos, oferecendo um ambiente mais coeso e confiável para serviços críticos como backup.
+
+Embora o **Linux**, especialmente o **Debian com btrfs**, também seja recomendado por sua estabilidade e amplo suporte, os manuais da **Prefeitura Municipal de Batatais** **não abordarão a instalação do REST Server ou servidores de arquivos em Linux**, focando exclusivamente na solução oficial adotada.
+
+A escolha do **FreeBSD + ZFS** como base do **REST Server** e dos servidores de arquivos (via Samba) se fundamenta em pontos amplamente reconhecidos:
+
+- **Confiabilidade elevada:** pilha de rede estável e comportamento consistente em produção.
+- **ZFS robusto:** sistema de arquivos empresarial, com verificação de integridade, correção automática e snapshots nativos.
+- **Uso consolidado:** presente em datacenters, appliances profissionais e serviços de alta disponibilidade, como TrueNAS.
+- **Maior maturidade:** ZFS, criado pela Sun/Oracle, é mais estável e confiável que btrfs em ambientes corporativos.
+
+Assim, a arquitetura do ambiente não depende apenas das ferramentas de backup (Restic e Backrest), mas também de uma base sólida no próprio sistema operacional — garantindo segurança, previsibilidade e resiliência ao servidor de backup.
+
+---
+### 📡 1. REST Server — Servidor central dedicado ao armazenamento
 
 O **REST Server** é um servidor leve e muito rápido que implementa a **API oficial do Restic**.
 
@@ -142,7 +184,7 @@ Ele não cria backup — ele _recebe_ e _armazena_. A operação é sempre no se
 
 No ambiente da instituição, ele fica instalado em uma **máquina dedicada exclusivamente para isso**, disponível na rede para receber os backups dos clientes.
 
-#### ✅ Por que ele é centralizado?
+#### 🤷‍♂️ Por que ele é centralizado?
 
 Ao manter um único ponto de armazenamento:
 
@@ -155,7 +197,7 @@ Ao manter um único ponto de armazenamento:
 
 A centralização também permite que políticas de segurança, retenção e auditoria sejam aplicadas a todos os setores da mesma forma.
 
-#### ✅ O que ele faz, na prática?
+#### 🏃 O que ele faz, na prática?
 
 Sempre que um computador envia um backup, o **REST Server**:
 
@@ -165,12 +207,12 @@ Sempre que um computador envia um backup, o **REST Server**:
 4. **Registra** o recebimento
 5. **Mantém o histórico** de versões anteriores (snapshots)
 
-Importante: 
+🚨 Importante: 
 Ele recebe os dados **já criptografados**, portanto não acessa nem interpreta o conteúdo.  
 Sua função é exclusivamente armazenar e disponibilizar o repositório quando solicitado.
 
 ---
-### 📦 2. Restic — Ferramenta responsável pela preparação e envio dos dados
+### ⚙️ 2. Restic — Ferramenta responsável pela preparação e envio dos dados
 
 O **Restic** é o programa que _realmente cria os backups_.  
 Ele é moderno, rápido e seguro. A documentação o define como:
@@ -337,12 +379,22 @@ Ele substitui soluções antigas e oferece:
 ---
 ## 📚 Referências
 
-- FreeBSD Project — [https://www.freebsd.org/](https://www.freebsd.org/)
-- REST Server — [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
-- Restic — [https://restic.net](https://restic.net)
-- Backrest — [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)
-- Let's Encrypt — [https://letsencrypt.org/about/](https://letsencrypt.org/about/)
-- NGINX — [https://nginx.org/en/](https://nginx.org/en/)
+### 🧠 Estudos e artigos técnicos
+
+- **Why We Use FreeBSD Over Linux: A CTO’s Perspective — DZone**  
+    [https://dzone.com/articles/why-we-use-freebsd-over-linux-a-ctos-perspective](https://dzone.com/articles/why-we-use-freebsd-over-linux-a-ctos-perspective?utm_source=chatgpt.com)
+- **High-Performance Computing Storage Performance and Reliability: Comparing Btrfs with ZFS**  
+    (Comparação técnica demonstrando a superioridade do ZFS em integridade e maturidade)  
+    https://www.usenix.org/legacy/event/lisa11/tech/full_papers/ellis.pdf
+
+### 📝 Documentação oficial
+
+- **FreeBSD Project** — [https://www.freebsd.org/](https://www.freebsd.org/)
+- **REST Server** — [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
+- **Restic** — [https://restic.net](https://restic.net)
+- **Backrest** — [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)
+- **Let’s Encrypt** — [https://letsencrypt.org/about/](https://letsencrypt.org/about/)
+- **NGINX** — [https://nginx.org/en/](https://nginx.org/en/)
 
 ---
 ## 🗃️ Documentação municipal
@@ -366,6 +418,165 @@ Ele substitui soluções antigas e oferece:
 ### ✅ 5. Solução de problemas
 
 🚧 Em elaboração
+
+---
+## 📘 GLOSSÁRIO TÉCNICO — TERMOS IMPORTANTES
+
+Esta seção explica, de forma simples, todos os termos técnicos citados no documento.
+
+Use sempre que tiver dúvida.
+
+---
+### 🖥️ **FreeBSD**
+
+Sistema operacional UNIX-like, usado mundialmente em servidores.  
+É conhecido por:
+
+- Altíssima estabilidade
+- Rede extremamente confiável
+- Performance consistente
+- Segurança nativa elevada
+- Excelente integração com ZFS
+    
+
+É o “sistema operacional oficial” dos servidores da Prefeitura.
+
+---
+### 🗄️ **ZFS**
+
+Sistema de arquivos moderno criado pela Sun Microsystems.
+
+Ele combina:
+
+- Sistema de arquivos
+- Gerenciamento de discos
+- Snapshots
+- Checksums de integridade
+- Compressão
+- Autocorreção de dados
+
+É extremamente robusto e resistente a falhas.
+
+---
+### 💾 **Storage Pool (ZFS Pool)**
+
+É o “conjunto de discos” onde o ZFS armazena todos os dados.
+
+Pense nele como a _caixa principal_ onde o sistema guarda:
+
+- arquivos
+- bancos de dados
+- datasets
+- snapshots
+
+O pool pode ser:
+
+- De um disco só
+- Mirror (espelho)
+- RAIDZ (paridade)
+
+---
+### 🗃️ **Dataset**
+
+Uma "subpasta avançada" dentro do ZFS, com seu próprio conjunto de regras.
+
+Cada serviço pode ter:
+
+- seu dataset
+- sua compressão
+- seu limite de espaço
+- seus snapshots
+- suas permissões
+
+Datasets evitam bagunça e deixam tudo organizado.
+
+---
+### 👯‍♂️ **Mirror (espelho)**
+
+Forma de redundância com **2 discos idênticos**.
+
+O ZFS grava tudo nos dois ao mesmo tempo.  
+Se um disco falhar → o sistema continua funcionando sem perda de dados.
+
+---
+### 🛢️ **RAIDZ1**
+
+Redundância com **pelo menos 3 discos**.
+
+Ele armazena:
+
+- Dados
+- Paridade (informação que permite recuperar um disco perdido)
+
+Se 1 disco falhar → o sistema continua funcionando.
+
+---
+### 🌳 **Btrfs**
+
+Sistema de arquivos moderno do Linux.
+
+Oferece:
+
+- Snapshots
+- Checksums
+- Compressão
+- Subvolumes
+- Envio incremental (send/receive)
+
+É muito bom para servidores Debian, principalmente com Samba.
+
+Embora não seja o padrão oficial, continua sendo uma excelente alternativa.
+
+---
+### ⚙️ **Restic**
+
+Ferramenta de backup:
+
+- Criptografa
+- Deduplica
+- Cria snapshots
+- Envia dados para o REST Server
+
+É o “motor” do backup.
+
+---
+### 📡 **REST Server**
+
+Servidor central onde ficam armazenados os repositórios do Restic.  
+É leve, eficiente e seguro.
+
+---
+### 🤖 **Backrest**
+
+Cliente de backup usado nas máquinas da Prefeitura.
+
+Ele:
+
+- Agenda
+- Executa
+- Organiza
+- Mantém
+- Restaura
+- Automatiza tudo usando Restic
+
+---
+### 🔐 **Snapshot (no ZFS ou no Restic)**
+
+Representa o estado dos arquivos em um instante específico.
+
+Serve para:
+
+- Restaurar versões antigas
+- Proteger contra ransomware
+- Criar históricos
+- Reverter erros
+
+---
+### 🔑 **Deduplicação**
+
+Técnica usada pelo Restic e ZFS para armazenar apenas **os pedaços diferentes** dos arquivos.
+
+Economiza espaço e acelera backups.
 
 ---
 ## 📜 Autor Técnico
