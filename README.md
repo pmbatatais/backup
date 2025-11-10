@@ -1,4 +1,4 @@
-### 🏛️ Backup – Ambiente de Backup com REST Server, Restic e Backrest
+# 🏛️ Backup – Ambiente de Backup com REST Server, Restic e Backrest
 
 Este documento consolida a **documentação oficial da Prefeitura Municipal de Batatais** referente ao ambiente padronizado de backup utilizado em equipamentos institucionais, **focando naqueles com dados críticos**.
 
