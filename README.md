@@ -7,56 +7,6 @@ Este documento consolida a **documentação oficial da Prefeitura Municipal de B
 > Por isso, ao longo do documento você encontrará referências ao **Glossário Técnico** (no final), onde cada termo é explicado de forma clara e simples.
 
 ---
-## ✅ Público-alvo
-
-Este manual é destinado a:
-
-- Técnicos de infraestrutura
-- Administradores de sistemas
-- Operadores autorizados do TI
-- Equipes que instalam, atualizam ou dão manutenção em servidores e estações corporativas
-- Responsáveis por servidores **FreeBSD** ou ambientes integrados ao backup institucional
-
-O conteúdo pressupõe conhecimentos básicos de:
-
-- Shell
-- Git
-- Conceitos de rede (SSH, HTTP/HTTPS)
-- Estrutura de permissões
-- Noções de publicação via Nginx
-
----
-## ✅ Requisitos para seguir o manual
-
-Para executar os procedimentos aqui descritos, o operador deve possuir:
-
-- Acesso administrativo ao servidor (root/administrator)
-- Acesso à rede interna onde o **REST Server** está disponível
-- Credenciais válidas para autenticação
-- Acesso ao repositório Git com scripts oficiais
-- Conhecimento básico de linha de comando e permissões
-
-Requisitos adicionais caso envolva publicação via Nginx:
-
-- Acesso ao servidor web
-- Permissão para criar arquivos de domínio
-- Permissão para criar ou renovar certificados SSL (Certbot)
-
----
-## ✅ Responsabilidades do operador
-
-O operador responsável pela implantação e manutenção deve:
-
-- Garantir conectividade com o **REST Server**
-- Acompanhar falhas recorrentes e verificar logs
-- Manter as credenciais protegidas
-- Criar datasets no local correto (FreeBSD/ZFS)
-- Validar espaço em disco adequado para os repositórios
-- Testar acesso local e remoto após publicações via Nginx
-- Notificar o TI sobre inconsistências, anomalias ou incidentes
-- Acompanhar mudanças estruturais (IP, DNS, certificados, permissões…)
-
----
 ## 🏛️ Padrões Técnicos da Prefeitura Municipal de Batatais
 
 A Prefeitura adota um **layout técnico institucional** para garantir estabilidade, previsibilidade e continuidade.
@@ -82,6 +32,56 @@ Esses padrões incluem:
 
 Este manual assume **integralmente** o layout técnico institucional.  
 Qualquer variação é feita por conta e risco do operador.
+
+---
+### ✅ Público-alvo
+
+Este manual é destinado a:
+
+- Técnicos de infraestrutura
+- Administradores de sistemas
+- Operadores autorizados do TI
+- Equipes que instalam, atualizam ou dão manutenção em servidores e estações corporativas
+- Responsáveis por servidores **FreeBSD** ou ambientes integrados ao backup institucional
+
+O conteúdo pressupõe conhecimentos básicos de:
+
+- Shell
+- Git
+- Conceitos de rede (SSH, HTTP/HTTPS)
+- Estrutura de permissões
+- Noções de publicação via Nginx
+
+---
+### ✅ Requisitos para seguir o manual
+
+Para executar os procedimentos aqui descritos, o operador deve possuir:
+
+- Acesso administrativo ao servidor (root/administrator)
+- Acesso à rede interna onde o **REST Server** está disponível
+- Credenciais válidas para autenticação
+- Acesso ao repositório Git com scripts oficiais
+- Conhecimento básico de linha de comando e permissões
+
+Requisitos adicionais caso envolva publicação via Nginx:
+
+- Acesso ao servidor web
+- Permissão para criar arquivos de domínio
+- Permissão para criar ou renovar certificados SSL (Certbot)
+
+---
+### ✅ Responsabilidades do operador
+
+O operador responsável pela implantação e manutenção deve:
+
+- Garantir conectividade com o **REST Server**
+- Acompanhar falhas recorrentes e verificar logs
+- Manter as credenciais protegidas
+- Criar datasets no local correto (FreeBSD/ZFS)
+- Validar espaço em disco adequado para os repositórios
+- Testar acesso local e remoto após publicações via Nginx
+- Notificar o TI sobre inconsistências, anomalias ou incidentes
+- Acompanhar mudanças estruturais (IP, DNS, certificados, permissões…)
 
 ---
 ## 🧭 Introdução — Por que padronizamos este ambiente?
@@ -377,24 +377,33 @@ Ele substitui soluções antigas e oferece:
 - Padronização total
 
 ---
-## 📚 Referências
+## 📚 Referências Bibliográficas
 
-### 🧠 Estudos e artigos técnicos
+**FreeBSD Project.** _FreeBSD Handbook e Documentação Oficial._  
+Disponível em: [https://www.freebsd.org/](https://www.freebsd.org/)
 
-- **Why We Use FreeBSD Over Linux: A CTO’s Perspective — DZone**  
-    [https://dzone.com/articles/why-we-use-freebsd-over-linux-a-ctos-perspective](https://dzone.com/articles/why-we-use-freebsd-over-linux-a-ctos-perspective?utm_source=chatgpt.com)
-- **High-Performance Computing Storage Performance and Reliability: Comparing Btrfs with ZFS**  
-    (Comparação técnica demonstrando a superioridade do ZFS em integridade e maturidade)  
-    https://www.usenix.org/legacy/event/lisa11/tech/full_papers/ellis.pdf
+**REST Server.** _Restic REST API Server._  
+Disponível em: [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
 
-### 📝 Documentação oficial
+**Restic.** _Restic Backup Tool — Documentação Oficial._  
+Disponível em: [https://restic.net](https://restic.net)
 
-- **FreeBSD Project** — [https://www.freebsd.org/](https://www.freebsd.org/)
-- **REST Server** — [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
-- **Restic** — [https://restic.net](https://restic.net)
-- **Backrest** — [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)
-- **Let’s Encrypt** — [https://letsencrypt.org/about/](https://letsencrypt.org/about/)
-- **NGINX** — [https://nginx.org/en/](https://nginx.org/en/)
+**Backrest.** _Web UI para Restic — Documentação e Repositório._  
+Disponível em: [https://github.com/garethgeorge/backrest](https://github.com/garethgeorge/backrest)
+
+**Let's Encrypt.** _Sobre o Projeto._  
+Disponível em: [https://letsencrypt.org/about/](https://letsencrypt.org/about/)
+
+**NGINX.** _Documentação Oficial do Servidor Web._  
+Disponível em: [https://nginx.org/en/](https://nginx.org/en/)
+
+**Pettit, J.** _Why We Use FreeBSD Over Linux: A CTO’s Perspective._  
+DZone, 2020.  
+Disponível em: [https://dzone.com/articles/why-we-use-freebsd-over-linux-a-ctos-perspective](https://dzone.com/articles/why-we-use-freebsd-over-linux-a-ctos-perspective?utm_source=chatgpt.com)
+
+**Ellis, B.** _High-Performance Computing Storage Performance and Reliability: Comparing Btrfs with ZFS._  
+USENIX, LISA 2011.  
+Disponível em: https://www.usenix.org/legacy/event/lisa11/tech/full_papers/ellis.pdf
 
 ---
 ## 🗃️ Documentação municipal
