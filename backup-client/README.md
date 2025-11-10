@@ -459,10 +459,9 @@ Disponível em: https://garethgeorge.github.io/backrest/introduction/getting-sta
 
 - **Documentação Oficial Backrest**: https://garethgeorge.github.io/backrest/introduction/getting-started
 - **REST Server:** <https://github.com/restic/rest-server>
-- **Manual institucional (Servidor REST):** <https://github.com/pmbatatais/backup-server>
+- **Manual institucional (Servidor REST):** [https://github.com/pmbatatais/backup](https://github.com/pmbatatais/backup/tree/main/backup-server)
 - **Ferramenta Restic:** [https://restic.net](https://restic.net/)
 - **Documentação ZFS (FreeBSD):** <https://docs.freebsd.org/pt-br/books/handbook/zfs/>
-- **Repositório do cliente:** <https://github.com/pmbatatais/backup-client.git>
 
 ---
 
