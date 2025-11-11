@@ -65,9 +65,9 @@ Para isso, foram definidos alguns princípios:
 Antes, cada setor fazia backups de maneira diferente, em locais distintos e com métodos próprios.  
 Agora, com tudo concentrado em um **servidor central**, o acompanhamento é muito mais simples:
 
-- Auditorias mais rápidas e completas
-- Políticas de segurança aplicadas igualmente a todos
-- Menor risco de falhas humanas ou duplicação de dados
+- **Manutenções mais simples:** discos danificados podem ser substituídos rapidamente sem interromper os backups de todos os setores
+- **Checagem de integridade dos backups:** é possível verificar a consistência e a completude dos dados armazenados, garantindo que as restaurações funcionem quando necessário
+- **Segurança e confiabilidade uniformes:** centralizar o armazenamento diminui o risco de perda de dados ou duplicação, enquanto cada cliente mantém a consistência das regras locais
 
 👉 **Em resumo:** com um ponto único, o controle é maior e o trabalho, menor.
 
