@@ -1,5 +1,7 @@
 # 🏛️ Backup – Ambiente de Backup com REST Server, Restic e Backrest
 
+<img src="img/mapa-mental.png" alt="Mapa Mental do Manual" width="800"/>
+
 ## 🧭 Sobre este documento
 
 Este guia foi elaborado para apresentar, de forma clara e prática, **como funciona o ambiente de backup institucional da Prefeitura Municipal de Batatais**, suas bases técnicas e seus princípios de padronização.
@@ -227,25 +229,25 @@ Exemplos de comandos Restic:
 - Inicializar um repositório remoto:
 
 ```shell
-restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 init
+restic -r rest:https://restserver.meudominio.com/Obras_Backrest_2025-11-11 init
 ```
 
 - Fazer backup de uma pasta:
 
 ```shell
-restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 backup /mnt/disk1/@fileserver
+restic -r rest:https://restserver.meudominio.com/Obras_Backrest_2025-11-11 backup /mnt/disk1/@fileserver
 ```
 
 - Listar snapshots (histórico de backups):
 
 ```shell
-restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 snapshots
+restic -r rest:https://restserver.meudominio.com/Obras_Backrest_2025-11-11 snapshots
 ```
 
 - Verificar integridade:
 
 ```shell
-restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 check
+restic -r rest:https://restserver.meudominio.com/Obras_Backrest_2025-11-11 check
 ```
 
 > Todos os comandos solicitam a **senha do repositório**, garantindo que apenas operadores autorizados possam restaurar dados.
