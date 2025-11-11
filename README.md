@@ -218,6 +218,7 @@ Todo backup criado pelo Restic é armazenado em um **repositório**, que possui:
 
 1. **Nome do repositório** – para identificar o backup (ex.: `Obras_Backrest_2025-11-11`)
 2. **Senha de criptografia** – essencial para restaurar dados
+3. **Endereço** – local onde os repositórios são salvos (ex: `restserver.meudominio.com`)
 
 > ⚠️ Se a senha do repositório for perdida, **os backups se tornam inacessíveis**, mesmo que os dados estejam fisicamente presentes.
 
@@ -225,21 +226,30 @@ Exemplos de comandos Restic:
 
 - Inicializar um repositório remoto:
 
-`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 init`
+```shell
+restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 init
+```
 
 - Fazer backup de uma pasta:
 
-`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 backup /dados/obras`
+```shell
+restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 backup /mnt/disk1/@fileserver
+```
 
 - Listar snapshots (histórico de backups):
 
-`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 snapshots`
+```shell
+restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 snapshots
+```
 
 - Verificar integridade:
 
-`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 check`
+```shell
+restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 check
+```
 
 > Todos os comandos solicitam a **senha do repositório**, garantindo que apenas operadores autorizados possam restaurar dados.
+> `restserver.meudominio.com` é o endereço do **REST Server**, podendo ser o endereço local `http://127.0.0.1:8000` ou um domínio válido. 
 
 
 **Referência:** 
@@ -270,7 +280,6 @@ Enquanto o _Restic_ é a ferramenta que realiza o backup, o **Backrest gerencia 
 > ⚠️ **Atenção sobre senha do repositório:** a senha de criptografia do Restic é **crítica**. Se for perdida, o backup **se torna inacessível e inutilizável**. É essencial armazená-la em um **cofre seguro de senhas**.
 
 ---
-
 ###### 🔄 Fluxo simplificado
 
 1. Backrest verifica se é hora do backup
