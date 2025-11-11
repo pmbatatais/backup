@@ -9,8 +9,7 @@ Cada capítulo foi pensado para que o leitor **compreenda não apenas o “como�
 ### 📘 Estrutura dos capítulos
 
 **🔗 Arquitetura — Como tudo funciona**  
-Aqui você descobrirá **como cada parte do sistema se conecta**: o papel do **Sistema Operacional** na estabilidade, o funcionamento do **Servidor de Backup** como repositório central e o trabalho conjunto dos softwares na execução dos backups.  
-É o coração técnico do documento — o ponto em que teoria e prática se encontram.
+Aqui você descobrirá **como cada parte do sistema se conecta**: o papel do **Sistema Operacional** na estabilidade, o funcionamento do **Servidor de Backup** como repositório central e o trabalho conjunto dos softwares na execução dos backups. 
 
 **🗃️ Documentação Municipal**  
 Esta seção reúne os **manuais oficiais** produzidos pela equipe de TI da Prefeitura.  
@@ -183,17 +182,6 @@ Ele não cria backup — ele *recebe* e *armazena*. A operação é sempre no se
 No ambiente da instituição, ele fica instalado em uma **máquina dedicada exclusivamente para isso** , disponível na rede para receber os backups dos clientes.
 
 ---
-###### 🤷‍♂️ Por que ele é centralizado?
-
-Ao manter um único ponto de armazenamento:
-*   O monitoramento é mais simples
-*   A administração do ambiente é facilitada
-*   Todos os setores seguem um padrão único
-*   Diminui-se a chance de erros causados por múltiplos sistemas independentes
-*   A segurança fica uniforme em toda a estrutura
-*   A manutenção é concentrada e mais eficiente
-
-A centralização também permite que políticas de segurança, retenção e auditoria sejam aplicadas a todos os setores da mesma forma.
 ###### 🏃 O que ele faz, na prática?
 
 Sempre que um computador (ou servidor SAMBA de dados críticos) envia um backup, o **REST Server** :
@@ -223,6 +211,36 @@ Ele é moderno, rápido e seguro. A documentação oficial o define como:
 > 👉 **Na prática, o Restic é o “motor” do backup**.
 > Ele pega os arquivos da máquina (ou do servidor SAMBA local) e os envia ao servidor, de forma segura e **deduplicada**.
 
+---
+#### 🔑 Repositórios e senhas
+
+Todo backup criado pelo Restic é armazenado em um **repositório**, que possui:
+
+1. **Nome do repositório** – para identificar o backup (ex.: `Obras_Backrest_2025-11-11`)
+2. **Senha de criptografia** – essencial para restaurar dados
+
+> ⚠️ Se a senha do repositório for perdida, **os backups se tornam inacessíveis**, mesmo que os dados estejam fisicamente presentes.
+
+Exemplos de comandos Restic:
+
+- Inicializar um repositório remoto:
+
+`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 init`
+
+- Fazer backup de uma pasta:
+
+`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 backup /dados/obras`
+
+- Listar snapshots (histórico de backups):
+
+`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 snapshots`
+
+- Verificar integridade:
+
+`restic -r rest:https://restiserver.meudominio.com/Obras_Backrest_2025-11-11 check`
+
+> Todos os comandos solicitam a **senha do repositório**, garantindo que apenas operadores autorizados possam restaurar dados.
+
 
 **Referência:** 
 Documentação oficial do Restic – _Introduction_.
@@ -231,21 +249,34 @@ Disponível em: [https://restic.net/](https://restic.net/). Acesso em: 04 nov. 2
 ---
 ### 🤖 3. Backrest — O cliente que organiza, agenda e gerencia os backups
 
-O **Backrest** é um *cliente de backup* instalado junto com o **Restic** nos computadores dos setores, **focado nas máquinas com dados críticos ou nos servidores de arquivos SAMBA**.
-Enquanto o *Restic* é a ferramenta que realiza o backup, **o Backrest é quem gerencia quando e como ele deve acontecer**.
+O **Backrest** é o cliente de backup instalado junto com o **Restic** nos computadores dos setores, focado nas máquinas com dados críticos ou nos servidores de arquivos SAMBA.
 
->👉 **Na prática: o Backrest é o “cliente oficial” instalado nas máquinas da Prefeitura**.
->Ele faz o Restic funcionar automaticamente, sem que o usuário precise usar linha de comando.
+Todas as regras, políticas e definições relacionadas ao backup — desde **retenção e auditoria** até **nome e senha do repositório** — são **executadas no cliente Backrest**, garantindo consistência, segurança e conformidade com as políticas institucionais.
+
+Enquanto o _Restic_ é a ferramenta que realiza o backup, o **Backrest gerencia quando, como e sob quais regras o backup deve acontecer**, automatizando todo o processo para que o usuário **não precise executar comandos manualmente**.
 
 ---
-###### ✅ O que o Backrest verifica?
+###### ✅ Funções do Backrest
 
-*   Horário programado do backup
-*   Pastas incluídas e excluídas
-*   Políticas de retenção
-*   Conectividade com o REST Server
-*   Falhas na execução anterior
-*   Alterações nos arquivos desde o último backup
+- Agenda automática do backup
+- Controle de pastas incluídas e excluídas
+- Aplicação de políticas de retenção (quantos snapshots manter)
+- Definição do **nome do repositório Restic** e da **senha de criptografia**
+- Envio de logs e auditoria (por exemplo, via email)
+- Verificação de conectividade com o REST Server
+- Registro de falhas e alertas
+- Monitoramento de alterações nos arquivos desde o último backup
+
+> ⚠️ **Atenção sobre senha do repositório:** a senha de criptografia do Restic é **crítica**. Se for perdida, o backup **se torna inacessível e inutilizável**. É essencial armazená-la em um **cofre seguro de senhas**.
+
+---
+
+###### 🔄 Fluxo simplificado
+
+1. Backrest verifica se é hora do backup
+2. Inicia Restic para enviar arquivos para o repositório remoto
+3. Confirma que o backup foi concluído com sucesso
+4. Gera log detalhado para auditoria e envio
 
 **Referência:** 
 Documentação oficial do Backrest – _Getting Started / Core Concepts_.  
@@ -292,7 +323,6 @@ Ele é voltado apenas para **equipamentos que realmente armazenam dados importan
 
 Quando um setor ou secretaria trabalha com muitos dados críticos, a recomendação é que a Gestão de TI instale um **servidor de arquivos SAMBA exclusivo para aquele setor**, utilizando **FreeBSD + ZFS**.  
 Nesse caso, o cliente de backup (**Backrest/Restic**) é instalado **somente nesse servidor**, garantindo que todos os arquivos do setor sejam protegidos de forma centralizada.
-
 ### Política de responsabilidade sobre os dados
 
 A Gestão de TI deve elaborar um **documento oficial** informando que cada setor ou secretaria é responsável por **salvar seus arquivos no servidor indicado**.  
@@ -312,20 +342,23 @@ O primeiro desafio é o **conceitual**.
 O sistema é poderoso, mas requer que o operador **entenda o que está fazendo** — e não apenas siga instruções.
 
 Enquanto algumas ferramentas de backup funcionam com simples cliques, aqui é preciso compreender **como cada peça se encaixa**:
-
 - **Restic:** é o motor — ele cria, deduplica e criptografa os dados.
 - **REST Server:** é o cofre — guarda os repositórios de forma centralizada.
 - **Backrest:** é o gerente — agenda, organiza e monitora tudo automaticamente.
 
-Além disso, conceitos como **repositório** e **snapshot** precisam estar claros:  
-um repositório é o local onde os dados ficam guardados (deduplicados e criptografados);  
-um snapshot é uma “fotografia” de um instante — a base para qualquer restauração.
+Além disso, é fundamental entender:
+- **Repositório:** local onde os dados ficam guardados (deduplicados e criptografados).
+- **Snapshot:** fotografia do estado dos arquivos em um instante, base para restaurações.
 
-> 💡 Em resumo: para operar bem, é preciso entender a lógica por trás da automação.  
-> Saber o “porquê” de cada comando torna o operador mais confiante e o sistema, mais seguro.
+> 💡 Operar com entendimento reduz erros e aumenta a segurança. Quem conhece a lógica confia na automação.
+
+**Soluções sugeridas:**
+- Treinamento estruturado sobre Restic, REST Server e Backrest.
+- Glossário de termos, com exemplos práticos de repositórios e snapshots.
+- Procedimentos de teste em ambiente controlado antes de operações críticas.
 
 ---
-### ⚙️ 2. Requisitos Técnicos — Um terreno firme exige preparo
+### ⚙️ 2. Requisitos Técnicos
 
 O segundo desafio é o **nível técnico necessário**.  
 A base da solução — **FreeBSD + ZFS** — é sólida, mas exige conhecimento específico.
@@ -340,6 +373,11 @@ Quanto mais a equipe domina esses fundamentos, mais previsível e confiável se 
 
 > ⚖️ O equilíbrio é simples: quem conhece o sistema, confia nele; quem apenas o executa, depende da sorte.
 
+**Soluções sugeridas:**
+- Guias de boas práticas para ZFS e FreeBSD.
+- Automação de verificações periódicas de integridade e espaço.
+- Checklists de permissões para novos datasets e servidores.
+
 ---
 ### 📚 3. Documentação — A base que ainda está em construção
 
@@ -349,98 +387,114 @@ Embora o sistema use ferramentas _open source_, a Prefeitura mantém **scripts e
 Atualmente, parte dessa documentação ainda está **em elaboração**, o que dificulta a padronização de procedimentos e a capacitação de novos operadores.  
 Manter essa documentação atualizada é tão importante quanto atualizar o servidor.
 
+**Soluções sugeridas:**
+- Finalizar manuais oficiais e manter versão atualizada.
+- Criar documentação visual (diagramas de fluxo e arquitetura).
+- Revisar periodicamente e treinar novos operadores com base nos manuais.
+
 > 🧠 Manual técnico é mais do que papel — é memória institucional.  
 > Um bom documento garante que o conhecimento não se perca quando as pessoas mudam.
 
 ---
-### 🔐 4. Senhas, repositórios e controle — um ponto que merece atenção
+### ⚠️ 4. Limitações do modelo cliente-centralizado
 
-O controle de **senhas, repositórios e servidores** ainda é o maior desafio operacional do ambiente de backup da Prefeitura.  
-A complexidade não está apenas nos repositórios Restic, mas também na **gestão dos servidores de arquivos** e nos **usuários e acessos administrativos**, muitos dos quais ainda seguem padrões antigos ou não padronizados.
+O modelo **REST Server + Backrest + Restic** funciona bem, mas apresenta **um desafio crescente conforme o ambiente aumenta**:
+- Todas as políticas e manutenção estão nos **clientes**
+- Se houver 10, 20 ou 50 clientes, qualquer alteração de política precisa ser aplicada **em cada máquina individualmente**
+- Isso exige coordenação e aumenta risco de inconsistência
 
----
-#### 📂 4.1 Repositórios e senhas
+**Por que não escolher uma solução totalmente centralizada?**
 
-Cada repositório Restic depende de uma **senha própria**. Sem ela, a restauração de dados é impossível.  
-Atualmente, ainda **não existe um inventário formal** para:
+- Soluções open-source totalmente centralizadas **existem** (UrBackup, Bacula, Amanda)
+- Mas elas são **muito complexas de instalar e manter**
+- As restaurações são lentas, mesmo usando PostgreSQL como backend, devido à necessidade de consultar o banco de dados
+- Outras ferramentas como *BorgBackup* também mantêm gerenciamento **no cliente**, reproduzindo a mesma limitação
 
-- Repositórios ativos e inativos
-- Senhas correspondentes
-- Responsáveis técnicos por cada repositório
-
-**Problema atual:**
-
-- Senhas podem se perder ou ser compartilhadas sem controle
-- Repositórios órfãos podem ficar inacessíveis
-- Auditorias e rastreabilidade ficam comprometidas
-
-**Possíveis soluções:**
-
-- Usar **senhas distintas para cada repositório**, mas armazenadas de forma segura (cofre digital interno, com acesso restrito).
-- Criar uma **lista centralizada** de repositórios ativos/inativos, contendo: nome, setor, status, última data de backup, hash da senha ou método seguro de recuperação, e responsável técnico.
-- Integrar com funções de _prune_ do Backrest para limpeza de repositórios inativos.
+> ⚖️ Em resumo: **não há solução open-source que seja centralizada, simples e rápida para restaurações**.  
+> O modelo REST Server + Backrest é um **bom compromisso entre simplicidade, segurança e eficiência**, mas exige disciplina na manutenção e monitoramento dos clientes.
 
 ---
-#### 🖥️ 4.2 Controle de servidores e usuários
+### 🔐 5. Senhas, repositórios e controle — um ponto crítico
 
-Além das senhas dos repositórios, o ambiente inclui **servidores legados e modernos**, cada um com seu histórico de usuários e políticas de acesso:
+O controle de **senhas, repositórios e servidores** é atualmente o maior desafio operacional.  
+A complexidade não está apenas nos repositórios Restic, mas também na **gestão dos servidores de arquivos**, usuários administrativos e políticas de acesso.
 
-| Servidor | Sistema atual | Backup              | Observações                                            |
-| -------- | ------------- | ------------------- | ------------------------------------------------------ |
-| Compras  | Windows 7     | Cobian Backup + FTP | Sistema defasado; não padronizado; vulnerável          |
-| Obras    | Debian        | Backrest            | Backup configurado, mas SO e usuários não padronizados |
+---
+#### 📂 5.1 Repositórios e senhas
+
+Cada repositório Restic precisa de **uma senha própria**. Sem ela, os dados são inacessíveis.  
+
+Atualmente, ainda **não há inventário formal**, incluindo:
+- Repositórios ativos e inativos.
+- Senhas correspondentes.
+- Responsáveis técnicos por cada repositório.
+
+**Problemas atuais:**
+- Senhas podem se perder ou ser compartilhadas sem controle.
+- Repositórios órfãos podem ficar inacessíveis.
+- Auditorias e rastreabilidade comprometidas.
+
+**Soluções sugeridas:**
+
+1. **Senhas individuais** para cada repositório, armazenadas em **cofre seguro da TI**.
+2. **Lista centralizada de repositórios**, contendo:
+    - Nome padronizado do repositório (ex.: setor_nome_data)
+    - Setor ou sistema associado
+    - Status (ativo/inativo)
+    - Última data de backup
+    - Hash da senha ou referência segura de recuperação
+    - Responsável técnico
+3. Integração com **Backrest prune** para limpar repositórios inativos de forma segura.
+    
+
+> 💡 Mesmo que o Restic esteja instalado no REST Server, **não há comando para listar repositórios automaticamente**. Inventário externo é obrigatório.
+
+---
+#### 🖥️ 5.2 Controle de servidores e usuários
+
+O ambiente inclui **servidores legados e não padronizados**, cada um com usuários e senhas próprias:
+
+|Servidor|Sistema atual|Backup|Observações|
+|---|---|---|---|
+|Compras|Windows 7|Cobian Backup + FTP|Sistema defasado; não padronizado; vulnerável|
+|Obras|Debian 11|Backrest|Backup configurado, mas SO e usuários não padronizados|
 
 **Problemas detectados:**
 
-- Usuários administrativos diferentes em cada servidor
-- Senhas distintas ou desconhecidas
-- Acesso root/admin nem sempre desativado ou auditado
-- Porta SSH padrão não padronizada (atualmente usa 65022 em alguns servidores)
-- Interface gráfica inconsistentes: alguns servidores só via Shell, outros com GUI
-- Documentação de contas e senhas incompleta ou inexistente
+- Usuários administrativos diferentes.
+- Senhas distintas ou desconhecidas.
+- Acesso root/admin não auditado.
+- Porta SSH não padronizada (atualmente alguns usam a padrão).
+- Interfaces inconsistentes (GUI e shell misturados).
+- Inventário de contas e senhas incompleto.
 
----
-#### 🔑 4.3 Padronização recomendada
+**Soluções sugeridas:**
 
-Para reduzir riscos e organizar o ambiente, sugere-se:
-
-1. **Usuário administrativo padrão**
-    - Criar um usuário único para administração de todos os servidores de arquivos
-    - Nome padronizado (ex.: `admin_backup`)
-    - Desativar `root` ou `Administrator` direto, permitindo apenas sudo ou equivalentes
-2. **Senha única ou diferenciada**
-    - **Diferencial:** cada servidor tem sua senha, mas todas são armazenadas no **cofre seguro da TI**
-    - **Única senha para todos:** só se houver controle físico rigoroso, mas aumenta risco de comprometimento global
-3. **SSH**
-    - Padronizar porta (ex.: manter 65022, mas documentar em todos os servidores)
-    - Usar **autenticação por chave pública** sempre que possível
-    - Limitar login root direto
+1. **Usuário administrativo único e padronizado**
+    - Ex.: `admin_backup`
+    - Root/Administrator desativado ou uso restrito via sudo.
+2. **Senhas diferenciadas, armazenadas com segurança**    
+    - Cada servidor pode ter sua senha, mas registrada em cofre seguro.
+    - Evitar senha única global; aumenta risco de comprometimento.
+3. **SSH padronizado**
+    - Porta uniforme (ex.: 2222)
+    - Autenticação por chave pública sempre que possível
+    - Login root desativado ou controlado
 4. **Interface**
-    - Preferir **Shell para servidores Linux/FreeBSD** — mais seguro e auditável
-    - GUI opcional apenas para administração inicial ou sistemas legados
-5. **Documentação completa**
-    - Lista de servidores, usuários, senhas (ou referência a cofre seguro), portas SSH, serviços ativos
-    - Inventário de backups e repositórios, integrando Cobian, Backrest e Restic
+    - Priorizar Shell em servidores Linux/FreeBSD
+    - GUI apenas em casos necessários ou legados
+5. **Inventário completo e auditável**
+    - Lista de servidores, usuários, senhas (ou referência ao cofre), portas SSH, serviços ativos
+    - Integrar informações de Cobian, Backrest e Restic
 
 ---
-#### 🧩 4.4 Lacunas atuais e próximos passos
+#### 🗂️ 5.3 Padronização de nomes de repositórios
 
-O ambiente ainda apresenta muitas “pontas soltas”:
+Além das senhas, **nomes padronizados para repositórios** ajudam na organização e auditoria. Sugestão:
 
-- Servidores antigos com software desatualizado
-- Usuários e senhas não padronizados
-- Falta de inventário central de repositórios e credenciais
-- Políticas de acesso e auditoria incompletas
-
-**Próximos passos recomendados:**
-
-1. Criar **inventário centralizado** de todos os servidores, repositórios e credenciais.
-2. Definir **usuário administrativo padrão** e desativar acessos diretos ao root/admin.
-3. Padronizar porta SSH e política de autenticação por chave.
-4. Implementar **política de senhas para repositórios e servidores**: seguras, diferentes e armazenadas de forma controlada.
-5. Atualizar documentação e manter manual vivo, refletindo o ambiente real.
-
-> 🚀 O objetivo não é eliminar o risco — é tornar o ambiente previsível, audível e seguro. Cada lacuna documentada é um ponto de melhoria, e cada servidor padronizado é um tijolo a mais na muralha da segurança.
+- Formato: `[Setor]_[Sistema]_[DataInicial]`
+- Exemplo: `Obras_Backrest_2025-01-01`
+- Benefícios: fácil identificação, rastreabilidade e limpeza de repositórios inativos.
 
 ---
 ## 🎯 Conclusão — Uma mudança para durar
