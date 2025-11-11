@@ -1,10 +1,14 @@
 # 🏛️ Backup – Ambiente de Backup com REST Server, Restic e Backrest
 
-Este documento consolida a **documentação oficial da Prefeitura Municipal de Batatais** referente ao ambiente padronizado de backup utilizado em equipamentos institucionais, **focando naqueles com dados críticos**.
+Este documento detalha a concepção do ambiente de backup da **Prefeitura Municipal de Batatais**, apresentando seus **principais componentes — FreeBSD, ZFS, REST Server, Restic e Backrest —** e explicando como eles se conectam para formar uma **estrutura padronizada e confiável de proteção de dados**.
 
->**ℹ️ Nota importante:**
->Alguns termos técnicos poderão ser novos para alguns leitores.
->Por isso, ao longo do documento você encontrará referências ao **Glossário Técnico** (no final), onde cada termo é explicado de forma clara e simples.
+> ℹ️ **Notas importantes:**
+> 
+> - A instalação do **Backrest** ou do **REST Server** **não deve ser realizada de forma isolada**; é fundamental compreender previamente a arquitetura e o modelo de funcionamento institucional descritos neste documento.
+> - A documentação completa sobre **instalação, operação e manutenção** está disponível na seção **Documentação Municipal**.
+
+---
+🧠 Alguns termos técnicos podem ser novos para parte dos leitores. Para facilitar a compreensão, todas as expressões técnicas utilizadas estão explicadas de forma clara no **Glossário Técnico**, ao final do documento.
 
 ---
 ## ⚠️ Definição do Escopo de Backup e Política de Dados Críticos (Gestão de TI)
@@ -327,12 +331,12 @@ O operador técnico acompanha apenas logs, alertas e relatórios.
 *   O servidor central escala com mais armazenamento
 
 ---
-## ⚠️ Desafios e Considerações sobre a Solução de Backup (Restic/Backrest)
+## 🚨 Desafios e Considerações sobre a Solução de Backup (Restic/Backrest)
 
 Embora o ambiente **REST Server + Restic + Backrest** seja reconhecido por oferecer **segurança total**, **integridade e confiabilidade**, e **padronização institucional**, é importante reconhecer os desafios que esta arquitetura impõe ao operador técnico.
 ##### Testemunho de Uso e Estabilidade
 
-A experiência da Gestão de T.I. da Prefeitura, que utiliza esta solução há cerca de 8 meses desde a implementação do servidor **Nextcloud**, atesta a estabilidade do sistema. Durante esse período, não foram registrados problemas operacionais que afetassem a integridade ou a capacidade de restauração dos dados.
+A experiência do corpo técnico da Prefeitura, que utiliza esta solução há cerca de 8 meses desde a implementação do servidor **Nextcloud**, atesta a estabilidade do sistema. Durante esse período, não foram registrados problemas operacionais que afetassem a integridade ou a capacidade de restauração dos dados.
 ##### 1. Curva de Aprendizagem e Complexidade Conceitual
 
 O principal desafio prático encontrado na operação desta solução é a **curva de aprendizagem**. Diferentemente de ferramentas com interfaces gráficas intuitivas, a operação correta exige que o operador possua **conhecimentos básicos de linha de comando**, **Shell**, **Git** e **estrutura de permissões**.
@@ -396,7 +400,7 @@ Disponível em: https://www.usenix.org/legacy/event/lisa11/tech/full_papers/elli
 ##### ✅ 1. Instalação do REST Server
 👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup/tree/main/backup-server](https://github.com/pmbatatais/backup/tree/main/backup-server)
 
-##### ✅ 2. Cliente de Backup – Backrest + Restic
+##### ✅ 2. Instalação do Cliente de Backup
 👉 **Tutorial Oficial:** [https://github.com/pmbatatais/backup/tree/main/backup-client](https://github.com/pmbatatais/backup/tree/main/backup-client)
 
 ##### ✅ 3. Como fazer backup
