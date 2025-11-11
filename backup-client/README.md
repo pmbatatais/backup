@@ -1,11 +1,10 @@
-
 # **🏛️ Manual de Instalação – Backrest (FreeBSD, Linux e Windows)**
 
 Este guia descreve o processo completo de instalação e configuração do **cliente de backup Backrest**, que será utilizado para enviar backups ao **servidor Rest Server**.  
 A versão adotada é a **1.10.1**, considerada **a mais estável e recente**.
 
 ---
-## **🙏 Agradecimentos**
+## 🙏 Agradecimentos
 
 O **Backrest** é um cliente moderno de backup desenvolvido por [**Gareth George**](https://github.com/garethgeorge/backrest), compatível com **Restic** e **REST Server**, oferecendo interface web e automação no envio e verificação de backups.
 
@@ -44,31 +43,7 @@ Não estão incluídos:
     Esses tópicos possuem documentação própria.
 
 ---
-## **📝 Sobre o Backrest**
-
-O **Backrest** é um cliente moderno que orquestra operações de backup com **Restic**, oferecendo uma interface web centralizada para gerenciamento de repositórios, agendamento, consulta de logs e administração de snapshots. Toda a criptografia ocorre **no cliente**, garantindo que apenas dados criptografados sejam enviados ao servidor.
-
-Seu fluxo operacional envolve a configuração de repositórios, definição de diretórios e políticas, execução dos backups via Restic e visualização dos snapshots na interface. O Backrest permite listar, comparar, verificar e aplicar retenção, além de trabalhar com múltiplos repositórios simultaneamente.
-
-Integrado ao **REST Server**, utiliza-o apenas como armazenamento seguro, mantendo todo o processamento e controle no cliente — alinhado às práticas de segurança da Prefeitura.
-
-O Backrest se destaca por ser:
-
-- ✅ Intuitivo e de rápida implementação
-- ✅ Seguro (criptografia completa no cliente)
-- ✅ Multiplataforma (Windows, Linux, FreeBSD, MacOS, Darwin)
-- ✅ Altamente automatizado
-- ✅ Adequado para uso corporativo e ambientes públicos
-
-Principais vantagens:
-
-- 🌐 Interface Web de administração (`http://localhost:9898`)
-- 🔒 Criptografia ponta a ponta
-- 📋 Logs detalhados
-- 🔗 Integração direta com **REST Server**
-
----
-## **📘 Conceitos Fundamentais**
+## 📘 Conceitos Fundamentais
 
 Antes de iniciar a configuração do ambiente, é importante compreender alguns conceitos essenciais que estruturam o funcionamento do Backrest e do Restic. Esses conceitos garantem que o operador tenha clareza sobre os componentes envolvidos no processo de backup, recuperação e manutenção do repositório.
 
@@ -102,13 +77,12 @@ Cada plano de backup é executado automaticamente com base nessas definições.
 - **Prune:** Remove os dados não referenciados no repositório, liberando espaço.
 - **Restore:** Recupera arquivos de um snapshot específico para o sistema local.
 
-
 **Referência:** 
 Documentação oficial do Backrest – _Getting Started / Core Concepts_.  
 Disponível em: [https://garethgeorge.github.io/backrest/introduction/getting-started](https://garethgeorge.github.io/backrest/introduction/getting-started). Acesso em: 04 nov. 2025.
 
 ---
-## **🔗 Integração com o REST Server da Prefeitura**
+## 🔗 Integração com o REST Server da Prefeitura
 
 Antes de iniciar a configuração do **Backrest (cliente)**, é imprescindível que o **REST Server** — servidor responsável pelo armazenamento centralizado dos backups — esteja plenamente implantado e operacional.
 
@@ -129,7 +103,7 @@ A Prefeitura de Batatais mantém um manual técnico completo para isso, disponí
 👉 [Repositório oficial – Servidor de Backup (REST Server)](https://github.com/pmbatatais/backup-server)
 
 ---
-## **🌍 Instalação por Sistema Operacional**
+## 🌍 Instalação por Sistema Operacional
 
 A seguir, abordaremos a instalação do Backrest no **FreeBSD, Linux e Windows**
 Consulte a documentação oficial no GitHub para obter instruções de instalação específicas por plataforma.
@@ -280,7 +254,7 @@ Exemplo:
 Caso a alteração seja necessária **após a instalação**, execute novamente o instalador para atualizar os atalhos com a porta configurada.
 
 ---
-## **⚙️ Configurações Iniciais**
+## ⚙️ Configurações Iniciais
 
 Após a instalação, acesse o Backrest pelo endereço padrão `http://localhost:9898` (ou pela porta configurada durante a implantação). Será necessário concluir o processo inicial de configuração conforme descrito abaixo.
 
@@ -405,13 +379,8 @@ Recomenda-se armazenar também uma cópia segura do arquivo completo de configur
 - **Linux/FreeBSD/MacOS:** `~/.config/backrest/config.json`
 Esse arquivo pode ser protegido em um cofre de senhas institucional ou armazenamento criptografado autorizado.
 
-### **Referência:** 
-Documentação oficial do Backrest – _Initial Setup_
-Disponível em: https://garethgeorge.github.io/backrest/introduction/getting-started/
-
 ---
-
-## **🔡 Variáveis de Ambiente**
+## 🔡 Variáveis de Ambiente
 ### Variáveis de Ambiente (Unix)
 
 |Variável|Descrição|Valor Padrão|
@@ -433,8 +402,7 @@ Disponível em: https://garethgeorge.github.io/backrest/introduction/getting-sta
 |**XDG_CACHE_HOME**|Caminho para o diretório de cache|_(não possui valor padrão definido)_|
 
 ---
-
-## **🔗 Referências**
+## 🔗 Referências
 
 - **Documentação Oficial Backrest**: https://garethgeorge.github.io/backrest/introduction/getting-started
 - **Manual institucional Servidor REST:** [https://github.com/pmbatatais/backup](https://github.com/pmbatatais/backup/tree/main/backup-server)
@@ -443,7 +411,6 @@ Disponível em: https://garethgeorge.github.io/backrest/introduction/getting-sta
 - **Documentação ZFS (FreeBSD):** <https://docs.freebsd.org/pt-br/books/handbook/zfs/>
 
 ---
-
 ## **📜 Autor**
 
 **Leonardo Ribeiro**  

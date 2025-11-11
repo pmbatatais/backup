@@ -700,6 +700,23 @@ Ele:
 *   Automatiza tudo usando Restic
 
 ---
+### 🗃️📂 Restic Repository
+
+É o local de armazenamento onde os dados de backup são efetivamente mantidos. Embora o Backrest gerencie esse repositório automaticamente, compreender sua função permite que o técnico interaja diretamente com os dados utilizando a CLI do Restic, quando necessário.
+
+---
+### 📌 Backrest Repository
+
+Refere-se ao conjunto de configurações definido dentro do Backrest, que especifica:
+
+- O destino onde os backups serão armazenados;
+- As credenciais de criptografia e autenticação;
+- As regras de orquestração do backup;
+- Opções adicionais, como hooks e parâmetros avançados.
+
+É, portanto, a “configuração lógica” que controla como o cliente Backrest se comporta frente ao repositório físico do Restic.
+
+---
 ### 🔐 Snapshot (no ZFS ou no Restic)
 
 Representa o estado dos arquivos em um instante específico.
@@ -711,7 +728,7 @@ Serve para:
 *   Reverter erros
 
 ---
-### 🔑 Deduplicação
+### 👥 Deduplicação
 
 Técnica usada pelo Restic e ZFS para armazenar apenas **os pedaços diferentes** dos arquivos.
 Economiza espaço e acelera backups.

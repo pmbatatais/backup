@@ -3,7 +3,7 @@
 Este guia descreve como configurar um **servidor de backup FreeBSD** usando a tecnologia **REST Server**
 
 ---
-## **🙏 Agradecimentos**
+## 🙏 Agradecimentos
 
 O **REST Server** é mantido pela equipe do [**Restic**](https://github.com/restic/rest-server).  
 Meus agradecimentos aos criadores pelo excelente trabalho que torna esta solução possível.
@@ -11,14 +11,13 @@ Meus agradecimentos aos criadores pelo excelente trabalho que torna esta soluç�
 Também fica o agradecimento ao [**Projeto FreeBSD**](https://www.freebsd.org/), cuja arquitetura consistente, documentação sólida e foco em estabilidade o tornam uma base extremamente confiável para ambientes de produção — e que inspirou a construção deste guia.
 
 ---
-## **📌 Considerações Iniciais**
+## 📌 Considerações Iniciais
 
 Este documento apresenta o procedimento oficial de implantação de um **servidor institucional de backup** baseado em **REST Server**, utilizando **FreeBSD** e armazenamento **ZFS**, conforme o **layout técnico adotado pela Prefeitura Municipal de Batatais**.
 
 O objetivo é fornecer um guia padronizado, seguro e detalhado, permitindo que qualquer técnico autorizado possa instalar ou reinstalar o ambiente com consistência, mantendo compatibilidade com o restante da infraestrutura.
 
 Este manual não contém informações sensíveis, como:
-
 - Senhas reais
 - Endereços de rede internos
 - Estrutura física dos servidores
@@ -33,55 +32,8 @@ _(Acesso restrito a colaboradores autorizados.)_
 
 Projetos complementares:
 
-- **Cliente Backrest:** [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+- **Cliente Backrest:** [https://github.com/pmbatatais/backup/tree/main/backup-client](https://github.com/pmbatatais/backup/tree/main/backup-client)
 - **Nextcloud (Batatais-Drive):** [https://github.com/pmbatatais/batatais-drive](https://github.com/pmbatatais/batatais-drive)
-
----
-### **📖 Termos importantes que você encontrará neste manual**
-
-Para evitar dúvidas, seguem explicações **breves** dos principais termos:
-
-### 🔹 **FreeBSD**
-
-Sistema operacional oficial dos servidores da Prefeitura. É estável, seguro e integra-se perfeitamente ao ZFS.
-
-### 🔹 **ZFS**
-
-Sistema de arquivos avançado que oferece:
-
-- integridade de dados
-- compressão
-- snapshots
-- replicação
-
-É o filesystem **obrigatório** para os repositórios de backup.
-
-### 🔹 **Dataset ZFS**
-
-Uma “subárea” independente dentro do ZFS, usada como diretório dedicado para cada serviço.  
-Exemplo usado neste manual:  
-`/mnt/backups/rest-server`
-
-### 🔹 **REST Server**
-
-O serviço que recebe e armazena os dados enviados pelo Restic.  
-Ele **não** faz backup — apenas armazena repositórios.
-
-### 🔹 **Restic**
-
-O motor CLI que realiza o backup, criptografa arquivos e envia os dados ao REST Server.
-
-### 🔹 **Backrest**
-
-Cliente corporativo utilizado nas máquinas da Prefeitura.  
-Gerencia o Restic, credenciais e políticas de backup.
-
-### 🔹 **Basic Auth**
-
-Autenticação HTTP usada para proteger o REST Server quando ele é publicado via Nginx.
-### 🔹 **Nginx**
-
-Servidor web oficial para publicar o REST Server (e outros sistemas).
 
 ---
 ### 🔭 Escopo deste documento
@@ -108,107 +60,39 @@ A instalação e operação do cliente **Backrest** estão documentadas separada
 👉 **Cliente Backrest (instalação oficial):** [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
 
 ---
-### 📝 Informações importantes antes da leitura
+### **📖 Termos importantes que você encontrará neste manual**
 
-Ao longo das instruções, são utilizados caminhos de diretórios, endereços IP, portas, nomes de *dataset*s e exemplos de domínios apenas para fins ilustrativos.
-Cada unidade técnica deverá adaptar esses valores conforme o ambiente real da Prefeitura, seguindo as políticas internas de segurança e infraestrutura.
+Para evitar dúvidas, seguem explicações **breves** dos principais termos:
+#### 🔹 FreeBSD
+Sistema operacional oficial dos servidores da Prefeitura. É estável, seguro e integra-se perfeitamente ao ZFS.
+#### 🔹 ZFS
+Sistema de arquivos avançado que oferece:
 
-### 🔹 Caminhos e comandos
+- integridade de dados
+- compressão
+- snapshots
+- replicação
 
-Usamos exemplos como:
-
+É o filesystem **obrigatório** para os repositórios de backup.
+#### 🔹 Dataset ZFS
+Uma “subárea” independente dentro do ZFS, usada como diretório dedicado para cada serviço.  
+Exemplo usado neste manual:  
 `/mnt/backups/rest-server`
-
-Eles podem ser modificados, desde que você ajuste o _dataset_ ZFS e o parâmetro `--path` do instalador.
-
-### 🔹 Endereço IP
-
-Substitua sempre pelos IPs reais do seu ambiente.
-
-### 🔹 Basic Auth
-
-As credenciais reais **não** ficam no servidor —  
-o **Backrest** envia automaticamente ao REST Server via variáveis de ambiente.
-
-### 🔹 Publicação com Nginx
-
-Você pode publicar:
-
-- via subpasta
-- via subdomínio
+#### 🔹 REST Server
+O serviço que recebe e armazena os dados enviados pelo Restic.  
+Ele **não** faz backup — apenas armazena repositórios.
+#### 🔹 Restic
+O motor CLI que realiza o backup, criptografa arquivos e envia os dados ao REST Server.
+#### 🔹 Backrest
+Cliente corporativo utilizado nas máquinas da Prefeitura.  
+Gerencia o Restic, credenciais e políticas de backup.
+#### 🔹 Basic Auth
+Autenticação HTTP usada para proteger o REST Server quando ele é publicado via Nginx.
+#### 🔹 Nginx
+Servidor web oficial para publicar o REST Server (e outros sistemas).
 
 ---
-## **💬 Sobre o Servidor REST Server, o Restic e o fluxo de backup**
-
-Antes de iniciar a instalação, é fundamental compreender os **três pilares** que formam todo o sistema de backup utilizado na Prefeitura:
-
-1. **REST Server** — o servidor que vamos instalar neste manual
-2. **Restic** — o motor de backup em linha de comando
-3. **Backrest** — o cliente corporativo que gerencia o Restic nas máquinas
-
-Entender esses três elementos é essencial para interpretar não apenas este manual, mas **todos os demais documentos e procedimentos de backup** utilizados internamente.
-
----
-### ✅ 1. REST Server — o servidor que armazena os backups
-
-O **REST Server** é um serviço HTTP simples e rápido, projetado exclusivamente para **armazenar os dados criptografados enviados pelo Restic**.
-Ele não faz backup, não deduplica, não lê arquivos — apenas recebe e entrega dados conforme o protocolo **REST** definido pelo próprio Restic.
-
-Em resumo:
-
-- É **o destino** dos backups.
-- Cada cliente guarda os dados criptografados em uma pasta chamada **repositório**.
-- Trabalha normalmente sobre armazenamento ZFS, que será explicado no capítulo **“Instalação passo a passo”**.
-- Será instalado e configurado **neste manual**.
-
----
-### ✅ 2. Restic — o motor de backup (CLI)
-
-O **Restic** é quem realmente executa o backup.  
-Ele funciona **exclusivamente em linha de comando**, sendo poderoso, seguro e extremamente eficiente.
-
-Ele é responsável por:
-
-- criar e gerenciar o **repositório**,
-- criptografar os dados **antes do envio**,
-- fazer deduplicação,
-- enviar os dados ao **REST Server**,
-- restaurar arquivos,
-- verificar integridade (**check**),
-- executar limpeza (**prune**) e
-- desbloquear repositórios (**unlock**).
-
-Documentação oficial:  
-🔗 [https://restic.net/](https://restic.net/)
-
-Embora muito robusto, o Restic pode ser difícil para usuários comuns — e é aqui que entra o terceiro elemento.
-
----
-### ✅ 3. Backrest — o cliente corporativo que facilita tudo
-
-O **Backrest** é o sistema adotado oficialmente pela Prefeitura para **gerenciar o Restic nas máquinas clientes**.  
-Ele oferece uma interface gráfica (Web GUI) e automações que tornam o uso do Restic simples e padronizado.
-
-O Backrest:
-
-- controla todas as variáveis de ambiente (incluindo Basic Auth),
-- cria e mantém repositórios,
-- gerencia múltiplas políticas de backup,
-- registra logs, IDs de máquinas e relatórios,
-- impede configurações incorretas,
-- atualiza automaticamente o Restic.
-
-Ele **não substitui** o Restic:  
-➡️ O Backrest **usa** o Restic de forma automatizada e corporativa.
-
-O Backrest **não deve ser instalado no servidor REST Server** — ele é exclusivo para clientes (estações e servidores que enviam backup).
-
-Documentação:  
-🔗 Prefeitura (instalação oficial): [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)  
-🔗 Documentação oficial do Backrest:[https://garethgeorge.github.io/backrest/introduction/getting-started](https://garethgeorge.github.io/backrest/introduction/getting-started)
-
----
-## **👨‍💻 Instalação passo a passo**
+## 👨‍💻 Instalação passo a passo
 
 Antes de iniciar a instalação, é fundamental entender **como a Prefeitura Municipal de Batatais padroniza seus servidores** e como o armazenamento de backups deve ser configurado.
 
@@ -281,7 +165,7 @@ sudo pkg install -y git
 #### 2️⃣ Clonar o repositório
 
 ```sh
-git clone https://github.com/pmbatatais/backup-server.git && cd backup-server
+git clone https://github.com/pmbatatais/backup.git && cd backup/backup-server
 ```
 
 ---
@@ -350,18 +234,18 @@ sudo service rest_server status
 sudo service rest_server edit
 ```
 ---
-## **Dica Bônus: Usuário SFTP Somente Leitura**
+## 💡 Dica Bônus: Usuário SFTP *Somente Leitura*
 
 > Para permitir que um técnico ou usuário visualize os repositórios do *REST Server* **sem alterar ou excluir nada**, siga este passo a passo:
 
 ---
-### 👥 1. Criar o grupo `sftpusers` (se ainda não existir)
+#### 👥 1. Criar o grupo `sftpusers` (se ainda não existir)
 ```sh
 sudo pw groupadd sftpusers
 ```
 
 ---
-### 👤 2. Criar o usuário e adicioná-lo ao grupo `sftpusers`
+#### 👤 2. Criar o usuário e adicioná-lo ao grupo `sftpusers`
 
 ```sh
 sudo pw useradd readonly -m -d /mnt/backups/rest-server -s /usr/sbin/nologin -G sftpusers
@@ -372,7 +256,7 @@ sudo passwd readonly
 > - `/usr/sbin/nologin`: impede login SSH interativo
 
 ---
-### 🔒 3. Configurar SSH para Chroot (enjaular o usuário)
+#### 🔒 3. Configurar SSH para Chroot (enjaular o usuário)
 
 Adicione ao final do arquivo `/etc/ssh/sshd_config`:
 
@@ -387,7 +271,7 @@ Match Group sftpusers
 > A variável `%h` garante que o usuário fique **preso ao próprio diretório home**, sem acesso a outros diretórios do sistema
 
 ---
-### 📂 4. Ajustar permissões para leitura apenas
+#### 📂 4. Ajustar permissões para leitura apenas
 
 ```sh
 sudo chown -R root:sftpusers /mnt/backups/rest-server
@@ -397,14 +281,14 @@ sudo chmod -R 755 /mnt/backups/rest-server
 > Subdiretórios devem seguir a mesma regra de propriedade `root:sftpusers`
 
 ---
-### ⚡ 5. Testar o acesso SFTP
+#### ⚡ 5. Testar o acesso SFTP
 ```sh
 sftp readonly@ip_do_servidor
 ```
 > O usuário consegue visualizar e baixar arquivos, mas tentativas de escrita **serão negadas**.
 
 ---
-## **🌐 Publicando o REST Server em um domínio ou subdomínio usando Nginx**
+## 🌐 Publicando o **REST Server** em um domínio ou subdomínio usando Nginx
 
 Este capítulo explica como disponibilizar o **REST Server** de forma segura na web usando **Nginx**, com autenticação, HTTPS e suporte a publicação em:
 
@@ -419,7 +303,7 @@ Na Prefeitura de Batatais, o técnico pode solicitar a criação de um subdomín
 > - ou um **serviço DDNS gratuito**, como **DuckDNS**, **FreeDNS**, **Cloudflare DDNS**, etc.
 
 ---
-### 🧱 Estrutura do Nginx no FreeBSD
+### 🏗️ Estrutura do Nginx no FreeBSD
 
 O FreeBSD é o **servidor oficial** adotado pela Prefeitura para:
 
@@ -428,7 +312,7 @@ O FreeBSD é o **servidor oficial** adotado pela Prefeitura para:
 - Servidor de arquivos
 - Servidor Web institucional
 
-Se o técnico quiser optar por **Linux**, outro sistema operacional ou até **Apache** no lugar do Nginx, isso **não será abordado neste manual**, mas é perfeitamente possível — apenas **fica fora do escopo técnico e do padrão adotado pela instituição**.
+Se o técnico quiser optar por Linux, outro sistema operacional ou até Apache no lugar do **Nginx**, isso **não será abordado neste manual**, mas é perfeitamente possível — apenas **fica fora do escopo técnico e do padrão adotado pela instituição**.
 
 No **FreeBSD**, a estrutura do **Nginx** segue este padrão:
 
@@ -909,7 +793,7 @@ Esse comando:
 ✅ Adiciona o novo subdomínio ao mesmo certificado SAN
 
 ---
-### **6️⃣ Testar e recarregar o Nginx**
+### 6️⃣ Testar e recarregar o Nginx
 
 ```shell
 nginx -t
@@ -917,11 +801,11 @@ service nginx restart
 ```
 
 ---
-## 🧩 **Integração do REST Server com o Backrest**
+## 🧩 Integração do REST Server com o Backrest
 
 _(Guia oficial para técnicos da Prefeitura de Batatais)_
 
-Este capítulo explica **como integrar**, de forma segura e padronizada, o **cliente Backrest** ao **REST Server** instalado no servidor de backup.
+Este capítulo explica **como integrar**, de forma segura e padronizada, o **Rest Server** ao cliente **Backrest**
 
 Antes de continuar, certifique-se de que:
 
@@ -931,7 +815,7 @@ Antes de continuar, certifique-se de que:
 👉 [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
 
 > ⚠️ **O Backrest não deve ser instalado no servidor REST Server.**  
-> Cada máquina cliente tem o seu Backrest local, enquanto o servidor **REST Server** fica centralizado no servidor de backup.
+> Cada máquina cliente tem o seu Backrest local, enquanto o servidor **REST Server** é o servidor que irá armazenar cópias enviadas pelo cliente. Lembre-se, a conexão é sempre **cliente -> servidor**
 
 ---
 ### 1. Acessando o painel do Backrest
@@ -939,13 +823,16 @@ Antes de continuar, certifique-se de que:
 Por padrão, o **Backrest** roda no endereço:
 
 ```http
-http://localhost:9898
+http://ip_do_cliente:9898
 ```
 
-Caso o técnico tenha modificado a porta TCP durante a instalação, deverá usar a nova porta configurada.
+Onde: 
+* `ip_do_cliente:9898` é o endereço ip e porta de qualquer máquina que irá enviar backups ao servidor **REST Server**
+
+> 📢 Caso o técnico tenha modificado a porta TCP durante a instalação, deverá usar a nova porta configurada.
 
 ---
-### 2. Inserindo um novo repositório REST Server no Backrest
+### 2. Adicionado um repositório
 
 Dentro do Backrest:
 
@@ -963,13 +850,13 @@ Exemplo ilustrativo (não copie este endereço — o seu endereço real depende 
 
 `rest:http://192.168.1.120:8000/financeiro`
 
-> ✅ O _Backrest_ é quem cria automaticamente o diretório do repositório no REST Server.  
+> ✅ O _Backrest_ é quem cria automaticamente o diretório do repositório no **REST Server**.  
 > Se você digitar `.../novo_repositorio`, o Backrest criará automaticamente a pasta:
 > `/backups/restic-server/novo_repositorio`
 
 #### ⚠️ Sobre edição de repositórios no Backrest
 
-O Backrest **não permite edição** de:
+Após adicionar um repositório, por padrão, o Backrest **não permite edição** de:
 
 - endereço do repositório (Repository URI)
 - nome do repositório
@@ -983,10 +870,10 @@ Se precisar modificar **qualquer um desses campos**, será preciso:
 
 > ⚠️ A senha de um repositório Restic **não pode ser alterada**.  
 > Se você perder essa senha, **não poderá recuperar nenhum snapshot**.  
-> Isso já está explicado detalhadamente no [manual do Backrest](https://github.com/pmbatatais/backup-client) — leia com atenção.
+> Isso já está explicado detalhadamente no manual municipal, disponível em [https://github.com/pmbatatais/backup/t](https://github.com/pmbatatais/backup/) — leia com atenção.
 
 ---
-### 3. Registrando as credenciais de *Basic Auth* no Backrest
+### 3. Registrando as credenciais de **Basic Auth** no Backrest
 
 O REST Server pode exigir _usuário e senha_ por meio de **Basic Auth**, garantindo que somente clientes autorizados acessem os repositórios. O **Restic** utiliza **variáveis de ambiente** para enviar essas credenciais em cada operação, mas no ambiente da Prefeitura esse processo é totalmente automatizado pelo **cliente Backrest**, que é responsável por armazenar e repassar essas variáveis ao Restic.
 
@@ -1037,8 +924,8 @@ Após configurar:
 
 Evite tentar adivinhar comportamentos — isso causa perda de tempo e falhas de configuração.
 
-👉 A prefeitura disponibiliza o manual completo do Backrest em:
-[https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+👉 A prefeitura disponibiliza o manual completo de instalação do cliente Backrest em:
+[https://github.com/pmbatatais/backup/tree/main/backup-client](https://github.com/pmbatatais/backup/tree/main/backup-client)
 
 📌 Se quiser, leia também o **manual oficial**, disponível em: 
 [https://garethgeorge.github.io/backrest/introduction/getting-started/](https://garethgeorge.github.io/backrest/introduction/getting-started/)
@@ -1057,16 +944,16 @@ Ele contém:
 Use sempre como referência oficial.
 
 ---
-## **🔗 Referências**
+## 🔗 Referências
 
-- Projeto **REST Server**: <https://github.com/restic/rest-server>
-- Ferramenta de Backup **Restic**: <https://restic.net>
-- Documentação oficial **Backrest**: https://garethgeorge.github.io/backrest/introduction/getting-started/
-- Manuais de instalação e configuração: [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
-- Tudo sobre **ZFS**: <https://docs.freebsd.org/pt-br/books/handbook/zfs/>
+- Projeto **REST Server**: [https://github.com/restic/rest-server](https://github.com/restic/rest-server)
+- Ferramenta de Backup **Restic**: [https://restic.net](https://restic.net)
+- Documentação oficial **Backrest**: [https://garethgeorge.github.io/backrest/introduction/getting-started/](https://garethgeorge.github.io/backrest/introduction/getting-started/)
+- Manual do município para instalação do cliente Backrest: [https://github.com/pmbatatais/backup/tree/main/backup-client](https://github.com/pmbatatais/backup/tree/main/backup-client)
+- Tudo sobre **ZFS**: [https://docs.freebsd.org/pt-br/books/handbook/zfs/](https://docs.freebsd.org/pt-br/books/handbook/zfs/)
 
 ---
-## **📜 Autor**
+## 📜 Autor
 
 **Leonardo Ribeiro**  
 Prefeitura Municipal de Batatais  
