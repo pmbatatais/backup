@@ -1,7 +1,5 @@
 # 🏛️ Backup – Ambiente de Backup com REST Server, Restic e Backrest
 
-<img src="img/mapa-mental.png" alt="Mapa Mental do Manual" width="800"/>
-
 ## 🧭 Sobre este documento
 
 Este guia foi elaborado para apresentar, de forma clara e prática, **como funciona o ambiente de backup institucional da Prefeitura Municipal de Batatais**, suas bases técnicas e seus princípios de padronização.
