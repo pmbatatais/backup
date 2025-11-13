@@ -25,6 +25,7 @@ https://clientebackup.pmbatatais.sp.gov.br
 
 Por questões de segurança e padronização, este documento **não inclui** informações operacionais sensíveis, como endereços internos, portas, credenciais ou localização física dos servidores. Esses detalhes serão disponibilizados exclusivamente em um **repositório privado da Prefeitura**, acessível somente a colaboradores autorizados.
 
+---
 ### ✅ Escopo deste documento
 
 Este guia aborda exclusivamente:
@@ -117,7 +118,7 @@ Consulte a documentação oficial no GitHub para obter instruções de instalaç
 Eu, **Leonardo Ribeiro**, adaptei este manual para o ambiente **FreeBSD**, sistema operacional utilizado oficialmente na **Prefeitura Municipal de Batatais**.
 
 Repositório institucional do cliente:  
-➡️ [https://github.com/pmbatatais/backup-client.git](https://github.com/pmbatatais/backup-client.git)
+➡️ [https://github.com/pmbatatais/backup.git](https://github.com/pmbatatais/backup.git)
 
 #### 🧱 Instalar os pré-requisitos
 
@@ -128,7 +129,7 @@ sudo pkg install -y git curl
 #### 1️⃣ — Clonar o repositório oficial da Prefeitura
 
 ```
-git clone https://github.com/pmbatatais/backup-client.git && cd backup-client
+git clone https://github.com/pmbatatais/backup.git && cd backup/backup-client
 ```
 
 O diretório inclui:
@@ -227,7 +228,8 @@ Environment="BACKREST_PORT=0.0.0.0:9898"
 ---
 ### 🖥️ Instalação no Windows
 
-Faça o download do instalador correspondente à arquitetura do seu sistema na [página de _releases_](https://github.com/garethgeorge/backrest/releases)
+Faça o download do instalador correspondente à arquitetura do seu sistema em [https://github.com/garethgeorge/backrest/releases](https://github.com/garethgeorge/backrest/releases)
+
 O instalador, denominado [BackrestSetup-x86_64.exe](https://github.com/garethgeorge/backrest/releases/download/v1.10.1/BackrestSetup-x86_64.exe), instalará o Backrest e um aplicativo gráfico na barra de tarefas (_tray application_) em:
 
 ```shell

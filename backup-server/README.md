@@ -27,7 +27,7 @@ Este manual não contém informações sensíveis, como:
 Esses dados estão disponíveis exclusivamente no **repositório privado da Prefeitura**: 
 
 👉 **Repositório central de backup (privado):**  
-[https://github.com/pmbatatais/backup](https://github.com/pmbatatais/backup)  
+[https://github.com/pmbatatais/infra](https://github.com/pmbatatais/infra)  
 _(Acesso restrito a colaboradores autorizados.)_
 
 Projetos complementares:
@@ -288,41 +288,81 @@ sftp readonly@ip_do_servidor
 > O usuário consegue visualizar e baixar arquivos, mas tentativas de escrita **serão negadas**.
 
 ---
-## 🌐 Publicando o **REST Server** em um domínio ou subdomínio usando Nginx
+## 🌐 Publicando o **REST Server** em um domínio ou subdomínio usando **NGINX**
 
-Este capítulo explica como disponibilizar o **REST Server** de forma segura na web usando **Nginx**, com autenticação, HTTPS e suporte a publicação em:
+Neste capítulo, vamos **tornar o REST Server acessível na internet de forma segura** utilizando o **NGINX como proxy reverso** e **configurando certificados SSL com o Let's Encrypt** para que a comunicação seja criptografada, e **autenticação básica (Basic Auth) para controlar o acesso remoto ao NGINX**. 
 
-✅ **Subpasta:** `https://meudominio.com/restserver`  
-✅ **Subdomínio:** `https://restserver.meudominio.com`
+O **NGINX** irá receber todas as requisições externas de clientes **Backrest** e as encaminhará para o **REST Server**, garantindo que o acesso seja **controlado e protegido**.
 
-Para fins de exemplo, utilizaremos o domínio fictício **meudominio.com**.  
-Na Prefeitura de Batatais, o técnico pode solicitar a criação de um subdomínio do domínio oficial **batatais.sp.gov.br** junto aos responsáveis do setor.
+>Para os exemplos, usamos o domínio fictício *meudominio.com*. 
+>Na Prefeitura de Batatais, o técnico pode solicitar a criação de um *subdomínio* dentro do domínio oficial **batatais.sp.gov.br**.
 
-> ✅ Você também pode usar:
-> - um **domínio próprio** (registrado em *HostGator*, *Registro.br*, *Cloudflare*, etc)
-> - ou um **serviço DDNS gratuito**, como **DuckDNS**, **FreeDNS**, **Cloudflare DDNS**, etc.
+Também é possível utilizar:
+- um **domínio próprio** (registrado em HostGator, Registro.br, Cloudflare etc.)
+- ou um **serviço DDNS gratuito**, como DuckDNS, FreeDNS ou Cloudflare DDNS
 
 ---
 ### 🏗️ Estrutura do Nginx no FreeBSD
 
-O FreeBSD é o **servidor oficial** adotado pela Prefeitura para:
+O **NGINX** (lê-se “engine-x”) é um **servidor web leve e de alto desempenho**, amplamente utilizado na internet para hospedar sites, sistemas e APIs.
 
-- REST Server
-- Nextcloud
-- Servidor de arquivos
-- Servidor Web institucional
+Mas o que o torna especial é que ele **não serve apenas para “mostrar páginas”** (*APACHE*), e sim para **“intermediar” acessos** — uma função conhecida como **proxy reverso**.
 
-Se o técnico quiser optar por Linux, outro sistema operacional ou até Apache no lugar do **Nginx**, isso **não será abordado neste manual**, mas é perfeitamente possível — apenas **fica fora do escopo técnico e do padrão adotado pela instituição**.
+Em termos simples:
 
-No **FreeBSD**, a estrutura do **Nginx** segue este padrão:
+> 💡 O NGINX é o “porteiro” do servidor.  
+> Ele recebe todas as requisições externas (vindas da internet ou da rede interna) e as redireciona para o serviço correto dentro da infraestrutura.
 
-#### 📝 Arquivo principal:
+---
+#### 🔁 O que é um Proxy Reverso?
+
+Imagine que a Prefeitura tem vários serviços internos:
+
+- Um servidor de backup (`REST Server`)
+- Um painel de gestão
+- Um sistema interno de chamados
+
+Todos estão na rede interna, cada um numa máquina diferente. 
+Em vez de abrir várias portas e IPs, o **NGINX funciona como uma “central de entrada”**.
+
+👉 Ele recebe o pedido do usuário, identifica para qual serviço aquilo deve ir e **repassa a solicitação internamente** — sem que o usuário precise saber onde cada coisa está.
+  
+Quando alguém acessa `https://restserver.meudominio.com`, o NGINX **encaminha silenciosamente** a requisição para o REST Server (`http://10.0.0.120:8000`).
+
+O usuário **nunca vê o IP interno nem a porta 8000** — tudo passa pelo NGINX.
+
+---
+#### ⚙️ Instalando o NGINX no FreeBSD
+
+1. **Acesse o servidor Web (FreeBSD):**
+    `ssh admin@192.168.1.10`
+2. **Instale o NGINX via pkg:**
+    `sudo pkg install nginx`
+3. **Ative o serviço para iniciar automaticamente:**
+    `sudo sysrc nginx_enable=YES`
+4. **Inicie o NGINX:**
+    `sudo service nginx start`
+5. **Verifique se está funcionando:**  
+    Abra no navegador:  
+    `http://ip-do-servidor`  
+    Deverá aparecer a página padrão do NGINX (“Welcome to nginx!”).
+
+---
+#### 🧩 Configuração — Proxy reverso para o REST Server
+
+A configuração do NGINX é feita em arquivos dentro de `/usr/local/etc/nginx/`.
+
+O principal arquivo é:
 
 ```shell
 /usr/local/etc/nginx/nginx.conf
 ```
 
-#### 📝 Arquivos individuais por domínio (padrão oficial)
+Você pode editar com:
+
+`sudo ee /usr/local/etc/nginx/nginx.conf`
+
+ 📝 Arquivos individuais por domínio (padrão oficial):
 
 ```shell
 /usr/local/etc/nginx/sites.d/
@@ -341,16 +381,6 @@ Para manter total consistência, o arquivo do **REST Server** também deverá se
 ```shell
 /usr/local/etc/nginx/sites.d/restserver.domain.conf
 ```
-
----
-#### 📢 Importante sobre este manual
-
-➡️ **Este manual cobre apenas o uso de _arquivos individuais_ no diretório `sites.d`.**
-
-➡️ **Não ensinaremos como configurar tudo diretamente no arquivo `nginx.conf`.**  
-Embora isso seja possível, não faz parte do padrão adotado pela Prefeitura, e manteremos o layout institucional como referência.
-
-Se o técnico desejar usar somente o `nginx.conf`, ele é livre para fazê-lo — mas **eventuais adaptações devem ser feitas por conta própria**.
 
 ---
 ### ⏳ Preparando o Nginx

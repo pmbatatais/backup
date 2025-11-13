@@ -1,4 +1,4 @@
-# 🏛️ Backup – Ambiente de Backup com REST Server, Restic e Backrest
+# **🏛️ Backup – Ambiente de Backup com REST Server, Restic e Backrest**
 
 ## 🧭 Sobre este documento
 
@@ -579,7 +579,8 @@ Use sempre que tiver dúvida.
 ---
 ### 🖥️ FreeBSD
 
-Sistema operacional UNIX-like, usado mundialmente em servidores.
+Sistema operacional *UNIX-like*, usado mundialmente em servidores.
+
 É conhecido por:
 *   Altíssima estabilidade
 *   Rede extremamente confiável
