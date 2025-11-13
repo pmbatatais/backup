@@ -2,6 +2,10 @@
 
 Este guia descreve como configurar um **servidor de backup FreeBSD** usando a tecnologia **REST Server**
 
+>Antes de realizar a implantação em ambiente de produção, recomenda-se fortemente a **criação de um ambiente de testes**, especialmente se estiver tendo o primeiro contato com o **FreeBSD** ou com o **REST Server**.
+
+Link da imagem de instalação **FreeBSD** (versão 14.3):[https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.3/FreeBSD-14.3-RELEASE-amd64-dvd1.iso](https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.3/FreeBSD-14.3-RELEASE-amd64-dvd1.iso)
+
 ---
 ## 🙏 Agradecimentos
 
@@ -233,59 +237,6 @@ sudo service rest_server status
 ```shell
 sudo service rest_server edit
 ```
----
-## 💡 Dica Bônus: Usuário SFTP *Somente Leitura*
-
-> Para permitir que um técnico ou usuário visualize os repositórios do *REST Server* **sem alterar ou excluir nada**, siga este passo a passo:
-
----
-#### 👥 1. Criar o grupo `sftpusers` (se ainda não existir)
-```sh
-sudo pw groupadd sftpusers
-```
-
----
-#### 👤 2. Criar o usuário e adicioná-lo ao grupo `sftpusers`
-
-```sh
-sudo pw useradd readonly -m -d /mnt/backups/rest-server -s /usr/sbin/nologin -G sftpusers
-sudo passwd readonly
-```
-> - `readonly`: nome do usuário de exemplo  
-> - `/mnt/backups/rest-server`: diretório dos repositórios  
-> - `/usr/sbin/nologin`: impede login SSH interativo
-
----
-#### 🔒 3. Configurar SSH para Chroot (enjaular o usuário)
-
-Adicione ao final do arquivo `/etc/ssh/sshd_config`:
-
-```conf
-Match Group sftpusers
-    ChrootDirectory %h
-    ForceCommand internal-sftp
-    AllowTcpForwarding no
-    X11Forwarding no
-```
-
-> A variável `%h` garante que o usuário fique **preso ao próprio diretório home**, sem acesso a outros diretórios do sistema
-
----
-#### 📂 4. Ajustar permissões para leitura apenas
-
-```sh
-sudo chown -R root:sftpusers /mnt/backups/rest-server
-sudo chmod -R 755 /mnt/backups/rest-server
-```
-> O usuário pode navegar e baixar arquivos, **mas não criar, alterar ou excluir**. \
-> Subdiretórios devem seguir a mesma regra de propriedade `root:sftpusers`
-
----
-#### ⚡ 5. Testar o acesso SFTP
-```sh
-sftp readonly@ip_do_servidor
-```
-> O usuário consegue visualizar e baixar arquivos, mas tentativas de escrita **serão negadas**.
 
 ---
 ## 🌐 Publicando o **REST Server** em um domínio ou subdomínio usando **NGINX**
@@ -972,6 +923,60 @@ Ele contém:
 - orientações para recuperação de desastres
 
 Use sempre como referência oficial.
+
+---
+## 💡 Dica Bônus: Usuário SFTP *Somente Leitura*
+
+> Para permitir que um técnico ou usuário visualize os repositórios do *REST Server* **sem alterar ou excluir nada**, siga este passo a passo:
+
+---
+#### 👥 1. Criar o grupo `sftpusers` (se ainda não existir)
+```sh
+sudo pw groupadd sftpusers
+```
+
+---
+#### 👤 2. Criar o usuário e adicioná-lo ao grupo `sftpusers`
+
+```sh
+sudo pw useradd readonly -m -d /mnt/backups/rest-server -s /usr/sbin/nologin -G sftpusers
+sudo passwd readonly
+```
+> - `readonly`: nome do usuário de exemplo  
+> - `/mnt/backups/rest-server`: diretório dos repositórios  
+> - `/usr/sbin/nologin`: impede login SSH interativo
+
+---
+#### 🔒 3. Configurar SSH para Chroot (enjaular o usuário)
+
+Adicione ao final do arquivo `/etc/ssh/sshd_config`:
+
+```conf
+Match Group sftpusers
+    ChrootDirectory %h
+    ForceCommand internal-sftp
+    AllowTcpForwarding no
+    X11Forwarding no
+```
+
+> A variável `%h` garante que o usuário fique **preso ao próprio diretório home**, sem acesso a outros diretórios do sistema
+
+---
+#### 📂 4. Ajustar permissões para leitura apenas
+
+```sh
+sudo chown -R root:sftpusers /mnt/backups/rest-server
+sudo chmod -R 755 /mnt/backups/rest-server
+```
+> O usuário pode navegar e baixar arquivos, **mas não criar, alterar ou excluir**. \
+> Subdiretórios devem seguir a mesma regra de propriedade `root:sftpusers`
+
+---
+#### ⚡ 5. Testar o acesso SFTP
+```sh
+sftp readonly@ip_do_servidor
+```
+> O usuário consegue visualizar e baixar arquivos, mas tentativas de escrita **serão negadas**.
 
 ---
 ## 🔗 Referências
