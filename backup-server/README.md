@@ -2,10 +2,6 @@
 
 Este guia descreve como configurar um **servidor de backup FreeBSD** usando a tecnologia **REST Server**
 
->Antes de realizar a implantação em ambiente de produção, recomenda-se fortemente a **criação de um ambiente de testes**, especialmente se estiver tendo o primeiro contato com o **FreeBSD** ou com o **REST Server**.
-
-Link da imagem de instalação **FreeBSD** (versão 14.3):[https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.3/FreeBSD-14.3-RELEASE-amd64-dvd1.iso](https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.3/FreeBSD-14.3-RELEASE-amd64-dvd1.iso)
-
 ---
 ## 🙏 Agradecimentos
 
@@ -61,7 +57,7 @@ Projetos complementares:
 - Configurações específicas de firewall, VLAN ou VPN
 
 A instalação e operação do cliente **Backrest** estão documentadas separadamente:  
-👉 **Cliente Backrest (instalação oficial):** [https://github.com/pmbatatais/backup-client](https://github.com/pmbatatais/backup-client)
+👉 **Cliente Backrest (instalação oficial):** [https://github.com/pmbatatais/backup/tree/main;backup-client](https://github.com/pmbatatais/backup/tree/main/backup-client)
 
 ---
 ### **📖 Termos importantes que você encontrará neste manual**
@@ -102,56 +98,49 @@ Antes de iniciar a instalação, é fundamental entender **como a Prefeitura Mun
 
 O ambiente oficial utiliza:
 
-- **FreeBSD** como sistema operacional
+- **FreeBSD** como sistema operacional para servidores
 - **ZFS** como sistema de arquivos padrão
-- Estrutura de diretórios organizada e padronizada
-- *Datasets* dedicados por serviço
+- **NGINX** como servidor WEB Oficial
 
-Essas escolhas fazem parte do **layout técnico institucional**, já explicado no capítulo _“Considerações Iniciais”_, e **não devem ser alteradas**.  
+Essas escolhas fazem parte do **layout técnico institucional**, já explicado no capítulo _“Considerações Iniciais”_, e **não devem ser alteradas**. 
+
 Se o técnico optar por usar outro sistema operacional, outro filesystem ou outra estrutura de diretórios, isso ficará **fora do escopo deste manual**, e deverá ser feito **por conta e risco**, sem suporte do layout oficial.
 
----
-### 🔍 Sobre o uso de _datasets_ ZFS
-
-O corpo técnico da Prefeitura definiu o **ZFS** como sistema de arquivos oficial por ser:
-
-- extremamente robusto
-- altamente confiável
-- ideal para ambientes de backup
-- nativamente integrado ao **FreeBSD**
-
-Um _dataset_ ZFS funciona como um diretório especial gerenciado pelo ZFS, oferecendo:
-
-- ✅ compressão integrada
-- ✅ integridade de dados por checksums
-- ✅ snapshots instantâneos
-- ✅ replicação fácil
-- ✅ gerenciamento independente para cada serviço
-
-📣 Embora o **REST Server** _possa_ funcionar em qualquer diretório convencional, **para seguir o padrão institucional**, recomenda-se fortemente criar um *dataset* para os repositórios de backup.
+Recomenda-se fortemente a **criação de um ambiente de testes**, especialmente se estiver tendo o primeiro contato com o **FreeBSD** ou com o **REST Server**.
 
 ---
-### ⚠️ Atenção ao caminho do repositório
+### 🧱 Montando o ambiente de testes
 
-O script de instalação `install.sh` usa o argumento:
+Para realizar os testes, utilize o **VirtualBox**, **VMware Workstation**, **Proxmox**, **Hyper-V** ou outro virtualizador de sua preferência. 
 
-```shell
---path=/caminho/do/repo
-```
+Recomenda-se criar **três máquinas virtuais**, conforme as funções abaixo:
+#### 1️⃣ Servidor FreeBSD – REST Server
 
-Se você **não informar `--path`**, será utilizado o caminho **padrão definido pela Prefeitura**:
+Esta será a máquina principal, onde será instalado o **REST Server**.  
+Ela atuará como o repositório central de backup e servirá de base para testar todas as configurações descritas neste manual.
 
-```shell
-/mnt/backups/rest-server
-```
+🔗 **Imagem oficial do FreeBSD 14.3:**  
+[https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.3/FreeBSD-14.3-RELEASE-amd64-dvd1.iso](https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.3/FreeBSD-14.3-RELEASE-amd64-dvd1.iso)
 
-✅ Portanto:
+#### 2️⃣ Servidor Web – NGINX (opcional para testes)
 
-- Se você usar o caminho **padrão**, crie e monte o dataset ZFS exatamente em:  
-    `/mnt/backups/rest-server`
-- Se você optar por outro caminho via `--path`, o *dataset* **deve ser montado exatamente nesse caminho** — caso contrário o **REST Server** não funcionará corretamente.
-  
-🏁 Este alinhamento entre **dataset ZFS** e **caminho do argumento `--path`** é obrigatório para manter compatibilidade com o layout técnico institucional.
+Este servidor será usado caso o leitor deseje praticar o conteúdo do capítulo **“Publicando o REST Server em um domínio ou subdomínio usando NGINX”**, que aborda a configuração de proxy reverso e certificados SSL.
+
+Embora o manual explique a instalação do **NGINX** apenas no **FreeBSD**, no ambiente de testes o técnico pode usar **qualquer sistema operacional voltado para servidores web** (como Linux ou Windows Server).
+
+>💡 **Dica:** 
+>No ambiente de testes, o NGINX pode ser instalado **na mesma máquina do FreeBSD** — isso simplifica os experimentos e elimina a necessidade de configurar redes entre VMs.  
+>Entretanto, **em ambiente de produção**, recomenda-se fortemente **a separação dos serviços em máquinas distintas** (físicas ou virtuais em plataformas como **Proxmox**, **VMware ESXi**, etc.), garantindo isolamento e melhor desempenho.
+
+#### 3️⃣ Máquina Cliente
+
+Esta máquina representará o **cliente de backup**, responsável por enviar os dados ao **REST Server**.  
+Pode ser **qualquer sistema operacional** (Windows, Linux ou FreeBSD).
+
+A Prefeitura padronizou o uso do **Backrest**, um cliente de backup com interface WebUI que se comunica diretamente com o **REST Server**.
+
+📘 **Manual de instalação do Backrest (cliente):**  
+[https://github.com/pmbatatais/backup/tree/main/backup-client](https://github.com/pmbatatais/backup/tree/main/backup-client)
 
 ---
 ### 🔨 Instalação
@@ -196,24 +185,51 @@ sudo zfs create \
 # Verificar se o *dataset* está montado corretamente
 sudo zfs list
 ```
+
 > 💡 _Se pretende usar outro caminho com `--path`, ajuste o mountpoint acima para refletir o novo diretório._
 
 ---
 #### 5️⃣ Executar a instalação
 
-Rode o script `install.sh`:
+Para iniciar a instalação, execute o script principal:
 
 ```shell
 sudo sh install.sh
 ```
 
-> 📢 Observação: Executar `./install.sh` direto pode não funcionar em alguns ambientes.
-> 🤓 Use sempre `sh install.sh`.
+> 💡 **Dica:** Em alguns ambientes o comando `./install.sh` pode não funcionar corretamente.  
+> Sempre prefira usar: `sh install.sh`
 
-Para instalar definindo um **caminho personalizado** e/ou outra **porta**:
+---
+##### 📁 Instalação com parâmetros personalizados
+
+Você pode definir o **caminho de armazenamento** dos repositórios e/ou a **porta de execução** do serviço durante a instalação. 
+
+Exemplo:
 ```shell
 sudo sh install.sh --path=/backups/repo_restic --port=8081
 ```
+
+- `--path=` → define o diretório onde os repositórios de backup serão criados.
+- `--port=` → define a porta onde o REST Server será executado.
+
+---
+##### ⚠️ Atenção ao caminho do repositório (`--path`)
+
+O instalador `install.sh` utiliza o argumento `--path` para definir o local físico dos repositórios.  
+Se você **não informar o parâmetro**, será adotado o **padrão oficial da Prefeitura**:
+
+```shell
+/mnt/backups/rest-server
+```
+
+✅ **Resumindo:**
+
+- Se usar o **caminho padrão**, o _dataset ZFS_ deve ser criado e montado em:  
+    `/mnt/backups/rest-server`
+- Se escolher um **caminho diferente** via `--path`, o _dataset ZFS_ **precisa estar montado exatamente nesse mesmo local**.
+
+> 🏁 Essa correspondência entre o **dataset ZFS** e o **argumento `--path`** é obrigatória para garantir compatibilidade com o **layout técnico institucional** e o correto funcionamento do **REST Server**.
 
 ---
 #### 6️⃣ Uso do serviço
@@ -285,49 +301,57 @@ O usuário **nunca vê o IP interno nem a porta 8000** — tudo passa pelo NGINX
 ---
 #### ⚙️ Instalando o NGINX no FreeBSD
 
-1. **Acesse o servidor Web (FreeBSD):**
-    `ssh admin@192.168.1.10`
-2. **Instale o NGINX via pkg:**
-    `sudo pkg install nginx`
-3. **Ative o serviço para iniciar automaticamente:**
-    `sudo sysrc nginx_enable=YES`
-4. **Inicie o NGINX:**
-    `sudo service nginx start`
-5. **Verifique se está funcionando:**  
-    Abra no navegador:  
-    `http://ip-do-servidor`  
-    Deverá aparecer a página padrão do NGINX (“Welcome to nginx!”).
+A seguir, o **passo a passo para instalar o NGINX no FreeBSD**, conforme o padrão adotado pela Prefeitura. 
+
+Se estiver em **ambiente de testes**, instale-o na **máquina virtual do Servidor Web** (ou junto ao **REST Server**, se preferir simplificar). 
+Em **produção**, instale o NGINX em **servidor dedicado**.
+
+> 💡 Para outros sistemas operacionais, pesquise na internet como instalar o NGINX na sua plataforma.
+
+**Acesse o servidor Web (FreeBSD):**
+```shell
+ssh admin@192.168.1.10
+```
+**Instale o NGINX via pkg:**
+```shell
+sudo pkg install nginx
+```
+**Ative o serviço para iniciar automaticamente:**
+```shell
+sudo sysrc nginx_enable=YES
+```
+**Inicie o NGINX:**
+```shell
+sudo service nginx start
+```
+**Verifique se está funcionando:** 
+```http
+http://ip-do-servidor
+```
+
+>Deverá aparecer a página padrão do NGINX (“Welcome to nginx!”).
 
 ---
 #### 🧩 Configuração — Proxy reverso para o REST Server
 
-A configuração do NGINX é feita em arquivos dentro de `/usr/local/etc/nginx/`.
-
-O principal arquivo é:
-
-```shell
-/usr/local/etc/nginx/nginx.conf
-```
-
-Você pode editar com:
-
-`sudo ee /usr/local/etc/nginx/nginx.conf`
-
- 📝 Arquivos individuais por domínio (padrão oficial):
+O **padrão oficial adotado pela Prefeitura Municipal de Batatais** determina que **todas as configurações individuais de domínio** do NGINX sejam armazenadas dentro do diretório:
 
 ```shell
 /usr/local/etc/nginx/sites.d/
 ```
 
-Este é o modelo **oficial** utilizado nos servidores da Prefeitura, seguindo o mesmo padrão de outros serviços:
+Cada serviço publicado (como Nextcloud, GLPI, REST Server, Wiki.js etc.) possui o seu próprio arquivo `.conf` dentro dessa pasta.  
+Esse formato facilita a organização e manutenção do **NGINX**, permitindo ativar, desativar ou revisar cada domínio separadamente — sem alterar o arquivo principal do servidor.
 
-```plaintext
-/usr/local/etc/nginx/sites.d/nextcloud.domain.conf
-/usr/local/etc/nginx/sites.d/nextcloud.local.conf
+📂 **Exemplos reais de estrutura padronizada:**
+
+```shell
+/usr/local/etc/nginx/sites.d/nextcloud.domain.conf /usr/local/etc/nginx/sites.d/nextcloud.local.conf
 /usr/local/etc/nginx/sites.d/glpi.domain.conf
+/usr/local/etc/nginx/sites.d/wiki_js.domain.conf
 ```
 
-Para manter total consistência, o arquivo do **REST Server** também deverá seguir esse formato:
+Seguindo essa convenção, o **REST Server** também deverá ter seu próprio arquivo dedicado, com o nome:
 
 ```shell
 /usr/local/etc/nginx/sites.d/restserver.domain.conf
@@ -336,29 +360,39 @@ Para manter total consistência, o arquivo do **REST Server** também deverá se
 ---
 ### ⏳ Preparando o Nginx
 
-Antes de criar o Virtual Host ou subdomínio do **REST Server**, é essencial **preparar** o Nginx para que ele **aceite arquivos individuais de configuração e rejeite acessos indevidos**.
+Antes de criar o Virtual Host ou subdomínio do **REST Server**, é essencial **preparar** o NGINX para que ele **aceite arquivos individuais de configuração e rejeite acessos indevidos**.
 
-Todas essas configurações devem ser feitas no arquivo principal:
+Todas essas configurações devem ser feitas no seguinte arquivo:
 
 ```shell
 /usr/local/etc/nginx/nginx.conf
 ```
 
 ---
-#### Habilitar suporte a arquivos individuais (`sites.d/*.conf`)
+#### 1. Habilitar suporte a arquivos individuais (`sites.d/*.conf`)
 
 Este include é **obrigatório** para que o Nginx reconheça arquivos como:
 
-- `/usr/local/etc/nginx/sites.d/restserver.domain.conf`
-- `/usr/local/etc/nginx/sites.d/nextcloud.domain.conf`
+```nginx
+/usr/local/etc/nginx/sites.d/restserver.domain.conf
+/usr/local/etc/nginx/sites.d/nextcloud.domain.conf
+/usr/local/etc/nginx/sites.d/glpi.domain.conf
+/usr/local/etc/nginx/sites.d/wiki_js.domain.conf
+```
 
-Dentro do bloco `http {}`, adicione:
+a. Edite o arquivo com o `nano`:
+
+```shell
+nano /usr/local/etc/nginx/nginx.conf
+```
+
+b. Dentro do bloco `http {}`, adicione:
 
 ```nginx
 include /usr/local/etc/nginx/sites.d/*.conf;
 ```
 ---
-#### Adicionar servidores default para bloquear acessos diretos ao IP
+#### 2. Adicionar servidores default para bloquear acessos diretos ao IP
 
 Esses blocos evitam acessos indevidos como:
 
@@ -366,6 +400,12 @@ Esses blocos evitam acessos indevidos como:
 - bots
 - scanners automáticos
 - requisições que não correspondam a um domínio configurado
+
+a. Edite o arquivo `nginx.conf` com o `nano`:
+
+```shell
+nano /usr/local/etc/nginx/nginx.conf
+```
 
 No bloco `http {}` do `nginx.conf`, adicione servidores _default_ para bloquear acessos sem domínio explícito:
 
@@ -389,7 +429,7 @@ server {
 ---
 #### Modelo `nginx.conf` pronto para copiar e colar
 
-Se for o caso, limpe o conteúdo do arquivo `nginx.conf` e cole o seguinte conteúdo:
+Se for o caso, **limpe todo o conteúdo** do arquivo `nginx.conf` e cole o seguinte conteúdo:
 
 ```nginx
 
@@ -447,12 +487,12 @@ http {
 ---
 ### 🔌 Separação entre Servidor WEB e Servidor REST
 
-O Nginx **não precisa estar no mesmo servidor** onde o REST Server está rodando.  
+O Nginx **não precisa estar no mesmo servidor** onde o **REST Server** está rodando.  
 Ambos podem estar separados — e isso é até desejável em algumas estruturas.
 
 Contudo:
 
-✅ **Recomendado**: manter os dois servidores **na mesma rede local** ou em uma **VPN**.
+✅ **Recomendado**: manter os dois servidores **na mesma rede local**, fisicamente ou em uma **VPN**.
 
 ⚠️ Se eles estiverem em redes diferentes, será necessário **abrir portas no roteador**, o que é inseguro.
 A documentação oficial do **REST Server** oferece alternativas de proteção para cenários com portas expostas, mas essa prática não é recomendada para a Prefeitura.
@@ -990,6 +1030,6 @@ sftp readonly@ip_do_servidor
 ---
 ## 📜 Autor
 
-**Leonardo Ribeiro**  
-Prefeitura Municipal de Batatais  
+**Leonardo Ribeiro**
+Prefeitura Municipal de Batatais 
 Responsável técnico pela padronização dos sistemas de backup e infraestrutura de servidores.
