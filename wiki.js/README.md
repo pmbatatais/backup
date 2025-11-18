@@ -532,7 +532,7 @@ http {
 	server {
 
 		listen 443 ssl default_server;
-		include snippets/ssl-batatais.giize.com;
+		include snippets/ssl-meudominio.com;
 		server_name _;
 		return 444;
 		
