@@ -172,12 +172,13 @@ Conteúdo sugerido (já configurado para usuário `www`, PID e log):
 
 name="wiki_server"
 rcvar="wiki_server_enable"
-chdir="/usr/local/www/wiki"
-pidfile="/var/run/${name}/${name}.pid"
-log_file="/var/log/${name}/${name}.log"
+
 wiki_dir="/usr/local/www/wiki"
+pidfile="/var/run/${name}/${name}.pid"
+logfile="/var/log/${name}/${name}.log"
+
 command="/usr/local/bin/node"
-command_args="${wiki_dir}/server"
+command_args="server"
 
 load_rc_config $name
 : ${wiki_server_enable:="NO"}
@@ -185,30 +186,44 @@ load_rc_config $name
 start_cmd="${name}_start"
 stop_cmd="${name}_stop"
 status_cmd="${name}_status"
-command_chdir="${wiki_dir}"
 
-wiki_server_start() {
+wiki_server_start()
+{
+    echo "Iniciando Wiki.js..."
 
- echo "Iniciando Wiki.js..."
+    # Garantir diretórios criados
+    install -d -o www -g www /var/run/${name}
+    install -d -o www -g www /var/log/${name}
+
     cd ${wiki_dir} || {
         echo "Falha ao entrar no diretório ${wiki_dir}"
         return 1
     }
-    /usr/sbin/daemon -u www -f -p ${pidfile} -o ${log_file} ${command} server
+
+    /usr/sbin/daemon \
+        -u www \
+        -f \
+        -p ${pidfile} \
+        -o ${logfile} \
+        ${command} ${command_args}
+
+    echo "Wiki.js iniciado."
 }
 
-wiki_server_stop() {
-    if [ -f ${pidfile} ]; then
-        kill $(cat ${pidfile}) && rm -f ${pidfile}
+wiki_server_stop()
+{
+    if [ -f "${pidfile}" ]; then
+        kill "$(cat ${pidfile})" 2>/dev/null && rm -f "${pidfile}"
         echo "Wiki.js encerrado."
     else
         echo "PID file não encontrado: ${pidfile}"
     fi
 }
 
-wiki_server_status() {
-    if [ -f ${pidfile} ]; then
-        if ps -p $(cat ${pidfile}) > /dev/null 2>&1; then
+wiki_server_status()
+{
+    if [ -f "${pidfile}" ]; then
+        if ps -p "$(cat ${pidfile})" >/dev/null 2>&1; then
             echo "Wiki.js está em execução (PID $(cat ${pidfile}))"
         else
             echo "Wiki.js não está em execução, mas o PID file existe."
@@ -218,7 +233,6 @@ wiki_server_status() {
     fi
 }
 
-load_rc_config $name
 run_rc_command "$1"
 ```
 
@@ -226,24 +240,6 @@ Salve e torne o script **executável**:
 
 ```shell
 chmod +x /usr/local/etc/rc.d/wiki_server
-```
-
-Ajuste o **owner** do diretório `/var/log/wiki_server` para o usuário de serviço `www`:
-
-```shell
-# Crie o diretório se não existir
-mkdir /var/log/wiki_server
-chown -R www:www /var/log/wiki_server
-chmod -R 755 /var/log/wiki_server
-```
-
-Ajuste o **owner** do diretório `/var/run/wiki_server` para o usuário de serviço `www`:
-
-```shell
-# Crie o diretório se não existir
-mkdir /var/run/wiki_server
-chown -R www:www /var/log/wiki_server
-chmod -R 755 /var/log/wiki_server
 ```
 
 ---
@@ -324,7 +320,7 @@ A instalação segue o padrão oficial da Prefeitura de Batatais, mas pode ser a
 1. Conecte-se ao servidor Web:
 
 ```shell
-ssh admin@192.168.1.10
+ssh admin@ip-do-servidor -p porta-ssh
 ```
 
 2. Instale o NGINX:
@@ -365,13 +361,15 @@ A Prefeitura adota a convenção de **armazenar cada serviço em arquivos separa
 Exemplos de arquivos:
 
 ```shell
-/usr/local/etc/nginx/sites.d/nextcloud.domain.conf /usr/local/etc/nginx/sites.d/glpi.domain.conf /usr/local/etc/nginx/sites.d/wiki_js.domain.conf
+/usr/local/etc/nginx/sites.d/meudominio.com
+/usr/local/etc/nginx/sites.d/glpi.meudominio.com
+/usr/local/etc/nginx/sites.d/wiki_js.meudominio.com
 ```
 
 O Wiki.js terá seu próprio arquivo, chamado:
 
 ```shell
-/usr/local/etc/nginx/sites.d/wiki_js.domain.conf
+/usr/local/etc/nginx/sites.d/wiki_js.meudominio.com
 ```
 
 ---
@@ -388,7 +386,7 @@ nano /usr/local/etc/nginx/nginx.conf
 Dentro do bloco `http {}`, adicione:
 
 ```nginx
-include /usr/local/etc/nginx/sites.d/*.conf;
+include sites.d/*;
 ```
 
 **Adicionar servidores default para bloquear acessos diretos pelo IP**
@@ -407,6 +405,241 @@ server {
     include snippets/ssl-domain.conf; # Ajuste o nome conforme certificado
     server_name _;
     return 444;
+}
+```
+
+Se quiser, adicione este modelo ao seu arquivo `nginx.conf`:
+
+```nginx
+user www www;
+worker_processes auto;
+
+error_log /var/log/nginx/error.log;
+
+events {
+    use kqueue;
+    worker_connections 2048;
+}
+
+http {
+	
+	# MIME TYPES 
+	include mime.types;
+	# Por padrão, o NGINX não irá olhar para o cabeçalho "X-Forwarded-For" e vai assumir que o ip do proxy reverso é o IP real do cliente
+	# Se o proxy reverso está na mesma rede, todos os clientes serão tratados como localhost
+	# Defina set_real_ip_from para confiar em conexões vindas do proxy-reverso
+	set_real_ip_from 127.0.0.1;
+	# Defina real_ip_header para informar ao NGINX que X-Forwarded-For é o ip real do cliente, já que estamos em uma conexão confiável.
+	real_ip_header X-Forwarded-For;
+	
+    # Cache configuration for frequently accessed files and file descriptors
+    # This can improve performance but values should be tested for your specific workload
+    open_file_cache max=200000 inactive=20s;  # Cache up to 200,000 items, removing inactive after 20s
+    open_file_cache_valid 30s;               # Revalidate cached items after 30 seconds
+    open_file_cache_min_uses 2;              # Only cache files accessed at least twice
+    open_file_cache_errors on;               # Cache errors for files that can't be accessed
+
+    # Define temporary storage path for client request bodies
+    client_body_temp_path /var/tmp/nginx/client_body_temp 1 2;
+
+    # Disable access logs to reduce I/O operations (can be enabled for debugging)
+    access_log off;
+	
+    # Enable sendfile to use kernel-level file copying for better performance
+    sendfile on;
+
+    # Limit the amount of data transferred in a single sendfile() call
+    sendfile_max_chunk 1m;
+
+    # Enable TCP_NOPUSH to send headers in one packet for better efficiency
+    tcp_nopush on;
+	tcp_nodelay on;
+
+    # Default MIME type for responses
+    default_type  application/octet-stream;
+
+    # Define log format for access logs (when enabled)
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    # Enable gzip compression for responses
+    gzip on;
+    gzip_static on;               # Serve pre-compressed files if they exist
+    gzip_disable "msie6";         # Disable compression for old IE versions
+    gzip_vary on;                 # Add "Vary: Accept-Encoding" header
+    gzip_proxied any;             # Compress responses for all proxied requests
+    gzip_comp_level 6;            # Compression level (1-9, with 6 being a good balance)
+    gzip_buffers 64 8k;           # Number and size of buffers for compression
+    gzip_http_version 1.1;        # Minimum HTTP version to compress responses for
+    gzip_min_length 256;          # Minimum response length to compress
+    gzip_types                    # File types to compress
+        application/atom+xml
+        application/javascript
+        application/json
+        application/ld+json
+        application/manifest+json
+        application/octet-stream
+        application/rss+xml
+        application/rtf
+        application/vnd.geo+json
+        application/vnd.ms-fontobject
+        application/wasm
+        application/x-font-ttf
+        application/x-javascript
+        application/x-web-app-manifest+json
+        application/xhtml+xml
+        application/xml
+        font/opentype
+        font/ttf
+        font/truetype
+        image/bmp
+        image/svg+xml
+        image/x-icon
+        text/cache-manifest
+        text/css
+        text/csv
+        text/javascript
+        text/plain
+        text/vcard
+        text/vnd.rim.location.xloc
+        text/vtt
+        text/x-component
+        text/x-cross-domain-policy
+        text/xml;
+
+    # Timeout for keep-alive connections
+    keepalive_timeout 65;
+
+    # Disable server tokens for security (hides Nginx version in headers)
+    server_tokens off;
+	
+	include sites.d/*;
+
+
+	# Bloquear qualquer requisição de clientes que não forem configuradas no NGIX 
+	# Exemplo: bloquear acessos pelo ip público, bots, etc
+
+	server {
+
+		listen 80 default_server;
+		server_name _;
+		return 444;
+		
+	}
+
+
+	server {
+
+		listen 443 ssl default_server;
+		include snippets/ssl-batatais.giize.com;
+		server_name _;
+		return 444;
+		
+	}
+}
+```
+
+Adicione também este modelo ao arquivo `mime.types`, em `/usr/local/etc/nginx/mime.types`:
+
+```nginx
+types {
+    text/html                                        html htm shtml;
+    text/css                                         css;
+    text/xml                                         xml;
+    image/gif                                        gif;
+    image/jpeg                                       jpeg jpg;
+    application/javascript                           js mjs;
+    application/atom+xml                             atom;
+    application/rss+xml                              rss;
+
+    text/mathml                                      mml;
+    text/plain                                       txt;
+    text/vnd.sun.j2me.app-descriptor                 jad;
+    text/vnd.wap.wml                                 wml;
+    text/x-component                                 htc;
+
+    image/avif                                       avif;
+    image/png                                        png;
+    image/svg+xml                                    svg svgz;
+    image/tiff                                       tif tiff;
+    image/vnd.wap.wbmp                               wbmp;
+    image/webp                                       webp;
+    image/x-icon                                     ico;
+    image/x-jng                                      jng;
+    image/x-ms-bmp                                   bmp;
+
+    font/woff                                        woff;
+    font/woff2                                       woff2;
+
+    application/java-archive                         jar war ear;
+    application/json                                 json;
+    application/mac-binhex40                         hqx;
+    application/msword                               doc;
+    application/pdf                                  pdf;
+    application/postscript                           ps eps ai;
+    application/rtf                                  rtf;
+    application/vnd.apple.mpegurl                    m3u8;
+    application/vnd.google-earth.kml+xml             kml;
+    application/vnd.google-earth.kmz                 kmz;
+    application/vnd.ms-excel                         xls;
+    application/vnd.ms-fontobject                    eot;
+    application/vnd.ms-powerpoint                    ppt;
+    application/vnd.oasis.opendocument.graphics      odg;
+    application/vnd.oasis.opendocument.presentation  odp;
+    application/vnd.oasis.opendocument.spreadsheet   ods;
+    application/vnd.oasis.opendocument.text          odt;
+    application/vnd.openxmlformats-officedocument.presentationml.presentation
+                                                     pptx;
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                                                     xlsx;
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document
+                                                     docx;
+    application/vnd.wap.wmlc                         wmlc;
+    application/wasm                                 wasm;
+    application/x-7z-compressed                      7z;
+    application/x-cocoa                              cco;
+    application/x-java-archive-diff                  jardiff;
+    application/x-java-jnlp-file                     jnlp;
+    application/x-makeself                           run;
+    application/x-perl                               pl pm;
+    application/x-pilot                              prc pdb;
+    application/x-rar-compressed                     rar;
+    application/x-redhat-package-manager             rpm;
+    application/x-sea                                sea;
+    application/x-shockwave-flash                    swf;
+    application/x-stuffit                            sit;
+    application/x-tcl                                tcl tk;
+    application/x-x509-ca-cert                       der pem crt;
+    application/x-xpinstall                          xpi;
+    application/xhtml+xml                            xhtml;
+    application/xspf+xml                             xspf;
+    application/zip                                  zip;
+
+    application/octet-stream                         bin exe dll;
+    application/octet-stream                         deb;
+    application/octet-stream                         dmg;
+    application/octet-stream                         iso img;
+    application/octet-stream                         msi msp msm;
+
+    audio/midi                                       mid midi kar;
+    audio/mpeg                                       mp3;
+    audio/ogg                                        ogg;
+    audio/x-m4a                                      m4a;
+    audio/x-realaudio                                ra;
+
+    video/3gpp                                       3gpp 3gp;
+    video/mp2t                                       ts;
+    video/mp4                                        mp4;
+    video/mpeg                                       mpeg mpg;
+    video/quicktime                                  mov;
+    video/webm                                       webm;
+    video/x-flv                                      flv;
+    video/x-m4v                                      m4v;
+    video/x-mng                                      mng;
+    video/x-ms-asf                                   asx asf;
+    video/x-ms-wmv                                   wmv;
+    video/x-msvideo                                  avi;
 }
 ```
 
