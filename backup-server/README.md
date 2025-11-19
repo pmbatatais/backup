@@ -145,6 +145,64 @@ A Prefeitura padronizou o uso do **Backrest**, um cliente de backup com interfac
 ---
 ### 🔨 Instalação
 
+Ao longo deste manual, muitos comandos e arquivos de configuração serão digitados. Para facilitar esse processo, é recomendado habilitar o acesso remoto via SSH, permitindo que o técnico trabalhe diretamente pelo computador de trabalho — copiando e colando comandos ou colando arquivos de configuração inteiros, tanto em servidores de produção quanto de teste.
+
+1. Instalar o nano
+
+```shell
+pkg install nano
+```
+
+3. Habilitar o SSH
+
+```sheel
+sysrc sshd_enable="YES"
+service sshd start
+```
+
+5. Permitir login SSH como root
+
+(Use apenas se o root tiver senha definida na instalação.)
+
+Editar:
+
+```shell
+nano /etc/ssh/sshd_config
+```
+
+Alterar ou adicionar:
+
+```shell
+PermitRootLogin yes
+```
+
+Reiniciar:
+
+```shell
+service sshd restart
+```
+
+4. Adicionar usuário ao grupo `wheel`
+
+Logado como root:
+
+```shell
+pw groupmod wheel -m nome_do_usuario
+```
+
+5. Instalar e liberar o sudo
+
+```shell
+pkg install sudo
+visudo
+```
+
+Descomentar a linha:
+
+```shell
+%wheel ALL=(ALL) ALL
+```
+
 ---
 #### 1️⃣ Instalar o Git
 
