@@ -559,13 +559,13 @@ Crie o arquivo em `/usr/local/etc/nginx/sites.d/restserver.domain.conf`
 touch /usr/local/etc/nginx/sites.d/restserver.domain.conf
 ```
 
-> 🚨 Certifique-se de que o bloco *http{ ... }*  do arquivo `nginx.conf` possui:
+> 🚨 Certifique-se de que o bloco *http{ ... }*  do arquivo `/usr/local/etc/nginx/nginx.conf` possui:
 
 ```nginx
 include /usr/local/etc/nginx/sites.d/*.conf;
 ```
 
-Adicione ao arquivo `restserver.domain.conf`:
+Adicione ao arquivo `restserver.meudominio.conf`:
 
 ```nginx
 
@@ -574,6 +574,20 @@ server {
     listen 80;
     server_name meudominio.com;
 
+	# Security headers
+	add_header Referrer-Policy "no-referrer" always;
+	add_header Content-Security-Policy "frame-ancestors 'self'" always;
+	add_header X-Content-Type-Options "nosniff" always;
+	add_header X-Frame-Options "SAMEORIGIN" always;
+	add_header X-Permitted-Cross-Domain-Policies "none" always;
+	add_header X-Robots-Tag "noindex, nofollow" always;
+	# Header X-XSS-Protection foi removido por ser considerado inseguro. 
+	# add_header X-XSS-Protection "1; mode=block" always;
+	add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+	
+	# Allow underscores in headers
+	underscores_in_headers on;
+	
 	# REST Server em um virtual host
 	location ^~ /restserver/ {
 	
@@ -641,10 +655,10 @@ Aqui o processo é idêntico ao anterior, mas com `server_name` dedicado.
 📝 Crie o arquivo de configurações `restserver.domain.conf`:
 
 ```shell
-touch /usr/local/etc/sites.d/restserver.domain.conf
+touch /usr/local/etc/sites.d/restserver.meudominio.conf
 ```
 
-✏️ Adicione o conteúdo ao arquivo `restserver.domain.conf`:
+✏️ Adicione o conteúdo ao arquivo `restserver.meudominio.conf`:
 
 ```nginx
 server {
@@ -652,8 +666,19 @@ server {
     listen 80;
     server_name restserver.meudominio.com;
 
-    # Inclui headers de segurança
-    include /usr/local/etc/nginx/snippets/ssl-params.conf;
+    # Security headers
+	add_header Referrer-Policy "no-referrer" always;
+	add_header Content-Security-Policy "frame-ancestors 'self'" always;
+	add_header X-Content-Type-Options "nosniff" always;
+	add_header X-Frame-Options "SAMEORIGIN" always;
+	add_header X-Permitted-Cross-Domain-Policies "none" always;
+	add_header X-Robots-Tag "noindex, nofollow" always;
+	# Header X-XSS-Protection foi removido por ser considerado inseguro. 
+	# add_header X-XSS-Protection "1; mode=block" always;
+	add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+	
+	# Allow underscores in headers
+	underscores_in_headers on;
 
     location / {
 	
@@ -729,7 +754,7 @@ pkg install -y py311-certbot py311-certbot-nginx
 ---
 #### 📌 Criando o certificado para o domínio
 
-Esse é o caso onde _não existe um subdomínio dedicado_.
+Se você escolheu registrar o restserver em um virtual-host, esse é o caso onde _não existe um subdomínio dedicado_.
 O Rest Server fica “embaixo” do domínio principal, por exemplo:
 
 ```http
